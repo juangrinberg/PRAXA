@@ -91,7 +91,9 @@ select columns_are(
 );
 
 select results_eq(
-  $$select a.attname::text, format_type(a.atttypid, a.atttypmod), a.attnotnull
+  $$select a.attname::text collate "default",
+           format_type(a.atttypid, a.atttypmod) collate "default",
+           a.attnotnull
       from pg_catalog.pg_attribute a
      where a.attrelid = 'public.chat_query_records'::regclass
        and a.attnum > 0 and not a.attisdropped

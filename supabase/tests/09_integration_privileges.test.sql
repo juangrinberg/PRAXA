@@ -383,20 +383,21 @@ select results_eq(
   'T-11: todas las FK de las tres tablas son on delete cascade');
 
 -- ---------------------------------------------------------------------------
--- T-12: las doce funciones de worker_api (C-15)
+-- T-12: las catorce funciones de worker_api (C-15)
 -- ---------------------------------------------------------------------------
 
 select functions_are('worker_api', array[
   'create_oauth_attempt', 'consume_oauth_attempt', 'create_pending_connection',
   'get_credential', 'confirm_connection', 'replace_credential', 'mark_needs_reauth',
   'begin_disconnect', 'purge_connection', 'list_pending_purges',
-  'count_credentials_by_key_version', 'rewrap_credential'],
-  'T-12: worker_api tiene exactamente las doce funciones de II.4');
+  'count_credentials_by_key_version', 'rewrap_credential',
+  'record_query', 'set_feedback'],
+  'T-12: worker_api tiene exactamente las catorce funciones de II.4 y M25a.1');
 
 select is(
   (select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'worker_api'),
-  12, 'T-12: doce funciones, sin sobrecargas');
+  14, 'T-12: catorce funciones, sin sobrecargas');
 
 select is_empty(
   $$select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -432,7 +433,7 @@ select is_empty(
   $$select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'worker_api'
        and not has_function_privilege('praxa_integrations', p.oid, 'EXECUTE')$$,
-  'T-12: praxa_integrations tiene EXECUTE sobre las doce');
+'T-12: praxa_integrations tiene EXECUTE sobre las catorce');
 
 select is(
   (select p.pronargs::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -448,7 +449,7 @@ select is_empty(
             or p.proargnames[2] is distinct from 'p_company_id'
             or p.proargtypes[0] <> 'uuid'::regtype
             or p.proargtypes[1] <> 'uuid'::regtype)$$,
-  'T-12: las otras once reciben p_actor_user_id y p_company_id primero');
+'T-12: las otras trece reciben p_actor_user_id y p_company_id primero');
 
 -- Los helpers privados tampoco tienen EXECUTE para nadie más que su dueño (C-03).
 select is_empty(
@@ -516,12 +517,12 @@ select ok(
 select is(
   (select count(*)::int from pg_temp.worker_api_calls() c
     where pg_temp.sqlstate_as('authenticated', c.call) = '42501'),
-  12, 'T-13: authenticated no ejecuta ninguna de las doce funciones, aun con USAGE (42501)');
+ 14, 'T-13: authenticated no ejecuta ninguna de las catorce funciones, aun con USAGE (42501)');
 
 select is(
   (select count(*)::int from pg_temp.worker_api_calls() c
     where pg_temp.sqlstate_as('anon', c.call) = '42501'),
-  12, 'T-13: anon no ejecuta ninguna de las doce funciones, aun con USAGE (42501)');
+14, 'T-13: anon no ejecuta ninguna de las catorce funciones, aun con USAGE (42501)');
 
 -- El USAGE temporal se revoca apenas termina T-13: si quedara hasta el rollback final,
 -- cualquier aserción posterior sobre el ACL del esquema (T-04 ya afirma lo contrario para
@@ -551,7 +552,7 @@ select is(
      join pg_namespace n on n.oid = p.pronamespace
      join pg_roles r on r.oid = p.proowner
     where n.nspname = 'worker_api' and r.rolbypassrls),
-  12, 'T-15: el dueño de las doce funciones tiene rolbypassrls');
+14, 'T-15: el dueño de las catorce funciones tiene rolbypassrls');
 
 select * from finish();
 rollback;
