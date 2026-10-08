@@ -48,4 +48,14 @@ describe('chat tool results — CA-44b', () => {
 
     expect(result.success).toBe(false);
   });
+  it('acepta connection_status con la lista de conexiones', () => {
+    const result = chatToolResultSchema.safeParse({
+      name: 'connection_status',
+      data: {
+        connections: [],
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
 });
