@@ -498,7 +498,8 @@ select is(
 
 select is(
   (select count(*)::int from public.chat_query_records
-    where company_id = 'c0a00000-0000-4000-8000-000000000401'),
+    where company_id = 'c0a00000-0000-4000-8000-000000000401'
+      and connection_id = 'cc000000-0000-4000-8000-000000000401'),
   0,
   'T-36: la purga borra los registros asociados a la conexión'
 );
