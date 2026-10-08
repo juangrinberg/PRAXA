@@ -19,7 +19,7 @@ const CARD_PATTERN = /\b(?:\d[ -]?){13,19}\b/g;
 
 /** Prefijos inequívocos de secretos habituales, no palabras largas arbitrarias. */
 const SECRET_PATTERN =
-  /\b(?:sk_(?:live|test)_|pk_(?:live|test)_|ghp_|github_pat_|xox[baprs]-|AKIA)[A-Za-z0-9_-]{16,}\b/g;
+  /\b(?:sk_(?:live|test)_|pk_(?:live|test)_|ghp_|github_pat_|xox[baprs]-|AKIA|stripe_)[A-Za-z0-9_-]{16,}\b/g;
 
 function passesLuhn(value: string): boolean {
   const digits = value.replace(/[ -]/g, '');

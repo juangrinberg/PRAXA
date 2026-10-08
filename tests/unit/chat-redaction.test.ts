@@ -49,7 +49,7 @@ describe('redactQuestion — CA-66', () => {
 
   it('reemplaza cadenas largas con forma de secreto por [SECRETO]', () => {
     const result = redactQuestion(
-      'La clave es stripe_test_value_123456',
+      'La clave es stripe_test_value_123456.',
     );
 
     expect(result).toBe('La clave es [SECRETO].');
