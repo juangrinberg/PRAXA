@@ -34,6 +34,14 @@ Hallazgos asignados a M06.3a (cerrada): `H-M04.1-02`, `H-E1-09`, `H-E1-10`, `H-E
 
 Después de M16.2, en este orden: M16c, M25a.1, M25a.2 y M28.3a.
 
+## Preparación independiente del chat
+
+Por solicitud explícita del usuario (2026-10-22), se adelantó únicamente trabajo de
+M25a.1 independiente de Insights. Es una implementación parcial, sin `G-CHAT-BASE`:
+el cierre sigue bloqueado por `G-SYNC` y por las verificaciones remotas pendientes.
+M25a.2 y M28.3a no están habilitadas. Evidencia y alcance en
+[sesiones/M25a.1.md](FASES/FASE1/meta_first/sesiones/M25a.1.md).
+
 ## Fuera de la ruta o pospuesto
 
 - **M16d — App Review y Business Verification:** depende de trámites del usuario ante Meta.

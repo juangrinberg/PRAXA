@@ -52,6 +52,8 @@ src/
     integrations/meta/      Graph API, cliente HTTP, OAuth, listado, prueba, revocación y
                             resultados del flujo
     integrations/           orquestación del ciclo de vida y Server Actions
+    chat/                   redacción, catálogo y presupuesto de herramientas; lectura del
+                            estado de conexión mediante el repositorio de integraciones
   proxy.ts                  refresco de sesión y redirección (NO autorización); Next.js
                             solo lo carga al mismo nivel que app/
 supabase/
@@ -66,8 +68,8 @@ tests/
 Previsto dentro de `src/modules/`, con rutas sugeridas por el plan:
 
 - `integrations/`: sincronización manual de Insights.
-- `chat/`: redacción, herramientas cerradas, adaptador del modelo, orquestador y guarda de
-  afirmaciones numéricas.
+- `chat/`: ejecución de métricas, registro de consultas, adaptador del modelo, orquestador
+  y guarda de afirmaciones numéricas. Ya existen redacción, catálogo y consulta de estado.
 
 ## Módulos y responsabilidades
 
@@ -85,7 +87,7 @@ Previsto dentro de `src/modules/`, con rutas sugeridas por el plan:
 | `integrations/repository` | Prepara operaciones reutilizables, valida K01 y respuestas, lee y recifra credenciales según versión y estado; ejecuta las operaciones del ciclo de vida por `worker_api`; lee la conexión viva de la empresa con el JWT del usuario | Existe |
 | `integrations/meta` | Versión de la Graph API y URLs en un solo lugar; cliente HTTP con timeout, clasificación de errores y ninguna credencial en las URLs de salida; OAuth, listado de cuentas delegadas, prueba de acceso a Insights, revocación y resultados cerrados | Existe; probado con Meta simulada |
 | `integrations` (resto) | Orquesta selección, reautorización, desconexión y purga perezosa; Server Actions de confirmación y desconexión. La sincronización manual queda prevista | Parcial |
-| `chat` | Consulta en lenguaje natural sobre gasto e impresiones, con cifras verificadas | Previsto |
+| `chat` | Redacción, validación del catálogo y consulta del estado de conexión. Consulta en lenguaje natural sobre métricas y verificación de cifras previstas | Parcial; sin conexión con la pantalla |
 
 La ruta `meta_first` no construye Tiendanube, GA4, reportes publicados, métricas derivadas
 ni base vectorial (spec, sección 2).
@@ -288,7 +290,19 @@ La ruta no tiene workers, colas ni programación automática (spec, sección 2; 
   ejecuta cuando el dueño vuelve a la página de integraciones o inicia una conexión.
 - Una ejecución colgada no bloquea para siempre porque su arrendamiento vence.
 
-## Chat (previsto)
+## Chat (base parcial; flujo completo previsto)
+
+Existen la función pura de redacción, el catálogo cerrado con validación de períodos,
+los validadores de valores numéricos como texto y un presupuesto de llamadas/plazo por
+turno. La herramienta de estado reutiliza `readConnectionRecord` con JWT/RLS y entrega
+el DTO público de K03, con ausencia explícita mediante `knownOr`. No hay un cliente
+privilegiado nuevo ni un camino de lectura paralelo.
+
+Ese presupuesto se comparte dentro de un turno: no coordina turnos de un usuario entre
+peticiones o instancias. Descarta respuestas tardías; el repositorio de conexiones aún
+no permite cancelar la petición HTTP en vuelo. La pantalla existente solo conserva
+mensajes locales; no llama a estas herramientas ni a un modelo. El siguiente flujo
+sigue previsto:
 
 ```
 Server Action del chat ──► K01 ──► límites del turno ──► redacción de la pregunta

@@ -276,7 +276,12 @@ están probadas con Meta simulada; el recorrido real con el dueño sigue pendien
 
 ## 8. Frontera del LLM (DEC-06, DEC-19; CA-48 a CA-50c, CA-54, CA-66)
 
-Todo previsto. Invariantes que el diseño del chat tiene que sostener:
+El flujo hacia el modelo sigue previsto. Existen módulos de redacción y validación del
+catálogo, y una lectura de estado que reutiliza el repositorio con JWT/RLS. Todavía no
+hay persistencia ni envío al modelo que consuman la redacción: la existencia de la
+función no acredita protección de un flujo que aún no está conectado. Las pruebas
+remotas del nuevo consumidor siguen siendo necesarias para acreditar su aislamiento.
+Invariantes que el diseño del chat tiene que sostener:
 
 - El modelo elige solo entre herramientas de un catálogo cerrado. No recibe SQL, nombres de
   tabla ni la capacidad de elegir `company_id` o conexión: el servidor los resuelve con K01.
