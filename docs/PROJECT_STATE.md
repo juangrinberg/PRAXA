@@ -34,6 +34,17 @@ Hallazgos asignados a M06.3a (cerrada): `H-M04.1-02`, `H-E1-09`, `H-E1-10`, `H-E
 
 Después de M16.2, en este orden: M16c, M25a.1, M25a.2 y M28.3a.
 
+## Trabajo paralelo autorizado
+
+**M25a.1 — corte anticipado determinístico:** trabajo paralelo autorizado por la Enmienda
+M25a.1 aprobada el 2026-11-03 y limitado al
+[plan del corte](FASES/FASE1/M25a.1/plan.md). Esta preparación documental no implementó ni
+cerró el corte; el código candidato previo no constituye evidencia de cierre.
+
+M16.2 sigue siendo la siguiente microfase principal habilitada. La implementación completa
+de M25a.1 continúa dependiendo de `G-SYNC`; `G-CHAT-BASE` y M25a.2 siguen bloqueados. El
+corte paralelo no modifica el orden M16.2 → M16c → M25a.1 → M25a.2.
+
 ## Fuera de la ruta o pospuesto
 
 - **M16d — App Review y Business Verification:** depende de trámites del usuario ante Meta.

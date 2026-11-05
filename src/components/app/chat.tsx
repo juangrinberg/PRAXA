@@ -3,6 +3,11 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 
 import type { Integracion } from '@/modules/app-data/types';
+import {
+  DEFAULT_CHAT_CONTEXT_LIMITS,
+  appendChatContextMessage,
+  createChatContext,
+} from '@/modules/chat/context';
 
 import s from './app.module.css';
 import c from './chat.module.css';
@@ -45,6 +50,7 @@ export function Chat({
   const [texto, setTexto] = useState('');
   const [buscarEnInternet, setBuscarEnInternet] = useState(false);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
+  const [, setContext] = useState(() => createChatContext());
   const ta = useRef<HTMLTextAreaElement>(null);
   const vacio = !texto.trim();
 
@@ -52,6 +58,7 @@ export function Chat({
     e?.preventDefault();
     const t = texto.trim();
     if (!t) return;
+    setContext((context) => appendChatContextMessage(context, { role: 'user', content: t }));
     setMensajes((m) => [...m, { id: m.length, texto: t, hora: horaActual() }]);
     setTexto('');
   };
@@ -113,6 +120,7 @@ export function Chat({
           rows={2}
           placeholder="Escribí tu pregunta acá..."
           aria-label="Tu pregunta"
+          maxLength={DEFAULT_CHAT_CONTEXT_LIMITS.maxCharacters}
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           onKeyDown={onKeyDown}
