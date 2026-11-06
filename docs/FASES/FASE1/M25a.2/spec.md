@@ -4,7 +4,8 @@
 > Preparado por autorización expresa del usuario del 2026-11-03 para documentar el trabajo
 > candidato sin iniciar la microfase. Este archivo no habilita M25a.2, no aprueba
 > `G-CHAT-BASE` y no cambia el pipeline. Las únicas implementaciones autorizadas antes de ese
-> gate son los cortes unitarios de contexto y de salida/guarda aprobados el 2026-11-06.
+> gate son los cortes unitarios de contexto, salida/guarda, render determinístico y adaptador
+> DeepInfra simulado aprobados el 2026-11-06.
 > M25a.1 y la aplicación posterior de `0017` al proyecto `app` siguen siendo precondiciones
 > de M25a.2 completa.
 
@@ -52,6 +53,29 @@ El schema y tipo de evidencia pertenecen a `tools/results.ts`; `guard.ts` los co
 `tools/results.ts` nunca depende de `guard.ts`. La forma sigue siendo candidata hasta que
 M16c y M25a.1 completos entreguen y aprueben sus contratos finales. Este corte implementa
 lógica pura y unitaria, no integración.
+
+**Corte anticipado de render determinístico aprobado para ejecución limitada.** Por decisión
+expresa del usuario del 2026-11-06, antes de `G-CHAT-BASE` se autoriza también el render
+determinístico puro en `src/modules/chat/render.ts`, su prueba dirigida en
+`tests/unit/chat-render.test.ts` y la documentación propia del corte.
+
+Este tercer corte consume exclusivamente la guarda y los resultados candidatos ya
+autorizados. Transforma una salida validada en una respuesta respaldada o una abstención
+controlada. No depende de M16c, no aprueba esta spec completa, no habilita M25a.2 ni
+`G-VR02` y no autoriza modelo, DeepInfra, orquestador, UI, Server Actions, repository,
+feedback, SQL, red, persistencia ni pruebas de aplicación.
+
+**Corte anticipado de adaptador DeepInfra simulado aprobado para ejecución limitada.** Por
+decisión expresa del usuario del 2026-11-06, antes de `G-CHAT-BASE` se autoriza también el
+adaptador `server-only` en `src/modules/chat/llm.ts`, su prueba dirigida en
+`tests/unit/chat-llm.test.ts` y la documentación propia del corte.
+
+Este cuarto corte fija el modelo `deepseek-ai/DeepSeek-V4.1-Flash` y el endpoint
+`https://api.deepinfra.com/v1/openai/chat/completions`. Se verifica exclusivamente mediante
+transporte y señal de cancelación inyectados, respuestas sintéticas y ningún secreto real.
+No realiza una llamada real ni acredita disponibilidad, precisión, latencia, funcionamiento
+del esquema real o `VR-02`. No aprueba esta spec completa, no habilita M25a.2 ni autoriza
+orquestador, UI, Server Actions, repository, feedback, persistencia o integración.
 
 **Hash de contenido:** pendiente. Debe calcularse cuando se resuelvan las preguntas abiertas
 y antes de la auditoría formal, sin la línea de estado:
@@ -524,6 +548,8 @@ identificador y precisión del modelo, latencia y cumplimiento de cada umbral.
 | D-M25a.2-11 | Aplicar `4` llamadas a herramientas, `800` tokens por cada llamada al modelo, `1` turno concurrente por usuario y `60` segundos de deadline total | Confirmar los valores de CA-70 asignados a M25a.2 | Usuario | 2026-11-03 |
 | D-M25a.2-12 | Autorizar antes de `G-CHAT-BASE` únicamente el núcleo puro y unitario del contexto conversacional en `context.ts` y su prueba, conforme a D-M25a.2-05 a D-M25a.2-10, sin UI, modelo, integración, persistencia ni contratos externos | Avanzar una pieza independiente sin habilitar M25a.2 completa ni alterar sus dependencias o gates | Usuario | 2026-11-06 |
 | D-M25a.2-13 | Autorizar antes de G-CHAT-BASE únicamente el núcleo puro y unitario de salida estructurada, detección de candidatos y guarda determinística, junto con la reorganización candidata de evidencia ya permitida por M25a.1, usando solo fixtures sintéticos y sin modelo, integración, persistencia ni contratos externos. | Avanzar lógica determinística independiente sin presentar la evidencia candidata como contrato final ni habilitar M25a.2 completa | Usuario | 2026-11-06 |
+| D-M25a.2-14 | Autorizar antes de G-CHAT-BASE únicamente el render determinístico puro que transforma una salida validada y resultados candidatos del turno en respuesta respaldada o abstención controlada, sin modelo, UI, integración, persistencia ni contratos externos. | Completar el recorrido determinístico puro sin habilitar M25a.2 completa ni depender de contratos externos | Usuario | 2026-11-06 |
+| D-M25a.2-15 | Autorizar antes de G-CHAT-BASE únicamente el adaptador server-only de DeepInfra con modelo fijo, salida estructurada, transporte y señal de cancelación inyectados y pruebas sintéticas, sin llamada real, orquestación, UI, persistencia ni acreditación del proveedor. | Verificar el límite local del adaptador sin presentar pruebas sintéticas como validación del proveedor | Usuario | 2026-11-06 |
 
 D-M25a.2-12 reemplaza únicamente el efecto no habilitante de D-M25a.2-02 para estos dos
 archivos y este corte limitado; no altera el estado ni el alcance del resto de la spec.
@@ -531,6 +557,14 @@ archivos y este corte limitado; no altera el estado ni el alcance del resto de l
 D-M25a.2-13 autoriza únicamente la lógica pura y unitaria y la dirección de dependencia
 aprobada para la evidencia candidata. No autoriza integración ni convierte esa forma en el
 contrato final de M16c o M25a.1.
+
+D-M25a.2-14 autoriza únicamente la transformación determinística posterior a la guarda. No
+autoriza modelo, presentación en UI, integración ni convierte los resultados candidatos en
+un contrato final.
+
+D-M25a.2-15 autoriza únicamente el adaptador aislado con transporte sintético. No autoriza
+una llamada real, el uso de secretos reales ni acreditar disponibilidad, precisión,
+latencia, esquema real o `VR-02`.
 
 ## Preguntas cerradas
 
