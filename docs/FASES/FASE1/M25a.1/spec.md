@@ -1,7 +1,7 @@
 # M25a.1 — Chat: registro por consulta, redacción y herramientas
 
-> **M25a.1 COMPLETA: BORRADOR ANTICIPADO — NO APROBADO — NO HABILITANTE**  
-> **CORTE ANTICIPADO DETERMINÍSTICO: APROBADO PARA EJECUCIÓN LIMITADA**  
+> **M25a.1 COMPLETA: BORRADOR ANTICIPADO — NO APROBADO — NO HABILITANTE**\
+> **CORTE ANTICIPADO DETERMINÍSTICO: APROBADO PARA EJECUCIÓN LIMITADA**\
 > Preparado por autorización expresa del usuario del 2026-11-01 y actualizado por la
 > Enmienda M25a.1 aprobada el 2026-11-03. M16.2 fase B continúa siendo la siguiente
 > microfase principal habilitada. M16c, G-VR01 y G-SYNC siguen pendientes.
@@ -16,12 +16,12 @@ aprobarla después de una auditoría `APROBABLE`. La Enmienda M25a.1 crea una ex
 auto-contenida para el corte anticipado; no aprueba el resto de esta spec ni `G-CHAT-BASE`.
 
 **ID:** `M25a.1` — hasta 8 horas de implementación. Es un límite de tamaño del corte, no una
-estimación ni una asignación de tiempo al usuario.  
-**Commit base inspeccionado:** `568e40214748ff1aad5cde3d00e16e88bbacf96b`  
-**Referencia histórica no normativa:** `8a8ce89`  
+estimación ni una asignación de tiempo al usuario.\
+**Commit base inspeccionado:** `568e40214748ff1aad5cde3d00e16e88bbacf96b`\
+**Referencia histórica no normativa:** `8a8ce89`\
 **Dependencia de la ruta:** corte anticipado exceptuado por la Enmienda M25a.1 del
-2026-11-03; implementación completa dependiente de `G-SYNC`  
-**Gate de salida previsto:** `G-CHAT-BASE`  
+2026-11-03; implementación completa dependiente de `G-SYNC`\
+**Gate de salida previsto:** `G-CHAT-BASE`\
 **Sucesora prevista:** M25a.2
 
 **Hash de contenido:** pendiente. Debe calcularse cuando se resuelvan las preguntas abiertas

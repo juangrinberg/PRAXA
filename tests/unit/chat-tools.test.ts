@@ -8,8 +8,90 @@ import {
   chatToolCallSchema,
   chatToolSelectionSchema,
 } from '@/modules/chat/tools/schema';
+import { adaptExecutedToolResults } from '@/modules/chat/tools/results';
 
 const period = { from: '2026-01-01', to: '2026-01-31' };
+
+const executedResult = (overrides: Record<string, unknown> = {}) => ({
+  tool_call_id: 'call_total',
+  tool_name: 'total',
+  coverage: 'complete',
+  values: [
+    {
+      path: ['value'],
+      kind: 'observed_value',
+      value: '9007199254740993.12345678901234567890',
+      metric: 'spend',
+      unit: 'currency',
+      currency: 'ARS',
+      account_ref: '…1234',
+      period,
+    },
+  ],
+  ...overrides,
+});
+
+describe('CA-50: adaptación de resultados ejecutados', () => {
+  it('crea TurnResultValue solo desde valores presentes en el resultado real', () => {
+    expect(adaptExecutedToolResults([executedResult()])).toEqual({
+      success: true,
+      values: [
+        {
+          tool_call_id: 'call_total',
+          path: ['value'],
+          kind: 'observed_value',
+          value: '9007199254740993.12345678901234567890',
+          metric: 'spend',
+          unit: 'currency',
+          currency: 'ARS',
+          account_ref: '…1234',
+          period,
+        },
+      ],
+      partialToolCallIds: [],
+    });
+  });
+
+  it('conserva la cobertura parcial asociada al tool_call_id', () => {
+    expect(adaptExecutedToolResults([executedResult({ coverage: 'partial' })])).toMatchObject({
+      success: true,
+      partialToolCallIds: ['call_total'],
+    });
+  });
+
+  it.each([
+    ['ID de llamada duplicado', [executedResult(), executedResult()]],
+    [
+      'ruta duplicada en una llamada',
+      [executedResult({ values: [executedResult().values[0], executedResult().values[0]] })],
+    ],
+    [
+      'valor numérico convertido a number',
+      [executedResult({ values: [{ ...executedResult().values[0], value: 1234.5 }] })],
+    ],
+    ['campo adicional en el sobre', [executedResult({ company_id: 'empresa-ajena' })]],
+    ['tenant inyectado en el sobre', [executedResult({ tenant_id: 'tenant-ajeno' })]],
+    ['conexión inyectada en el sobre', [executedResult({ connection_id: 'conexion-ajena' })]],
+    [
+      'campo sensible adicional en el valor',
+      [executedResult({ values: [{ ...executedResult().values[0], sql: 'select 1' }] })],
+    ],
+    [
+      'cuenta autoritativa inyectada en el valor',
+      [executedResult({ values: [{ ...executedResult().values[0], account_id: 'act_ajena' }] })],
+    ],
+    [
+      'tool_call_id introducido dentro del valor',
+      [executedResult({ values: [{ ...executedResult().values[0], tool_call_id: 'inyectado' }] })],
+    ],
+    ['connection_status con valores métricos', [executedResult({ tool_name: 'connection_status' })]],
+  ])('rechaza %s', (_case, results) => {
+    expect(adaptExecutedToolResults(results)).toEqual({
+      success: false,
+      reason: 'invalid_tool_results',
+    });
+  });
+});
 
 describe('catálogo de entrada de herramientas del chat', () => {
   it('no impone un mínimo no aprobado de llamadas', () => {

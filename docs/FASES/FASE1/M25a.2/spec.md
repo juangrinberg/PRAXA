@@ -3,9 +3,10 @@
 > **BORRADOR ANTICIPADO — NO APROBADO — NO HABILITANTE**
 > Preparado por autorización expresa del usuario del 2026-11-03 para documentar el trabajo
 > candidato sin iniciar la microfase. Este archivo no habilita M25a.2, no aprueba
-> `G-CHAT-BASE` y no cambia el pipeline. La única implementación autorizada antes de ese gate
-> es el corte unitario de contexto aprobado el 2026-11-06. M25a.1 y la aplicación posterior
-> de `0017` al proyecto `app` siguen siendo precondiciones de M25a.2 completa.
+> `G-CHAT-BASE` y no cambia el pipeline. Las únicas implementaciones autorizadas antes de ese
+> gate son los cortes unitarios de contexto y de salida/guarda aprobados el 2026-11-06.
+> M25a.1 y la aplicación posterior de `0017` al proyecto `app` siguen siendo precondiciones
+> de M25a.2 completa.
 
 **Estado:** BORRADOR ANTICIPADO — NO APROBADO — NO HABILITANTE
 
@@ -27,11 +28,30 @@ usuario del 2026-11-06, antes de `G-CHAT-BASE` se autoriza únicamente el núcle
 unitario del contexto conversacional en `src/modules/chat/context.ts`, su prueba dirigida en
 `tests/unit/chat-context.test.ts` y la documentación propia de este corte.
 
-La excepción no aprueba esta spec completa, no habilita M25a.2 ni modifica su dependencia
-formal. No autoriza UI, DeepInfra, modelo, orquestador, guarda, render, Server Actions,
+El corte de contexto no aprueba esta spec completa, no habilita M25a.2 ni modifica su
+dependencia formal. No autoriza UI, DeepInfra, modelo, orquestador, guarda, render, Server Actions,
 feedback, pruebas de aplicación ni VR-02. Tampoco permite SQL, persistencia, almacenamiento
 del navegador, archivos, red, contratos o DTOs de M16c o M25a.1. El contexto es memoria
 efímera no autoritativa y no constituye evidencia para las respuestas.
+
+**Corte anticipado de salida y guarda aprobado para ejecución limitada.** Por decisión
+expresa del usuario del 2026-11-06, antes de `G-CHAT-BASE` se autoriza también el núcleo puro
+y unitario de salida estructurada, detección de candidatos numéricos y guarda determinística,
+junto con la reorganización candidata de evidencia ya permitida por M25a.1.
+
+Este segundo corte se limita a `src/modules/chat/output-schema.ts`,
+`src/modules/chat/numeric-candidates.ts`, `src/modules/chat/guard.ts`,
+`src/modules/chat/tools/results.ts` únicamente para ownership y adaptación candidata,
+`tests/unit/chat-guard.test.ts`, `tests/unit/chat-tools.test.ts` únicamente para adaptación,
+y la documentación propia del corte. Usa solo fixtures sintéticos. No autoriza modelo,
+DeepInfra, orquestador, render, UI, Server Actions, repository, feedback, SQL, red,
+persistencia, pruebas de aplicación ni contratos externos. No aprueba esta spec completa,
+no habilita M25a.2 o `G-VR02` y no modifica su dependencia formal.
+
+El schema y tipo de evidencia pertenecen a `tools/results.ts`; `guard.ts` los consume y
+`tools/results.ts` nunca depende de `guard.ts`. La forma sigue siendo candidata hasta que
+M16c y M25a.1 completos entreguen y aprueben sus contratos finales. Este corte implementa
+lógica pura y unitaria, no integración.
 
 **Hash de contenido:** pendiente. Debe calcularse cuando se resuelvan las preguntas abiertas
 y antes de la auditoría formal, sin la línea de estado:
@@ -353,18 +373,20 @@ compartidos, contratos de resultados, `connection_status`, firmas de registro/vo
 
 ## Archivos previstos
 
-Esta tabla no autoriza la implementación completa mientras el estado siga no habilitante. La
-única excepción es el corte unitario de contexto identificado expresamente en sus filas.
+Esta tabla no autoriza la implementación completa mientras el estado siga no habilitante.
+Las únicas excepciones son los cortes unitarios de contexto y de salida/guarda identificados
+expresamente en sus filas.
 
 | Archivo | Nuevo o modificado | Para qué | Base documental / estado |
 |---|---|---|---|
 | `docs/FASES/FASE1/M25a.2/spec.md` | Nuevo | Este borrador anticipado | Artefactos del pipeline y autorización expresa del usuario, 2026-11-03 |
-| `src/modules/chat/output-schema.ts` | Nuevo | Salida `text` + `claims` | II.13 paso 1 |
+| `src/modules/chat/output-schema.ts` | Nuevo | Salida `text` + `claims` | Corte limitado de salida/guarda aprobado el 2026-11-06 |
 | `src/modules/chat/llm.ts` | Nuevo | Adaptador DeepInfra | II.13 paso 2 |
 | `src/modules/chat/limits.ts` | Modificado/compartido | Tokens, llamadas, concurrencia y duración | II.13 pasos 2, 3 y 7 |
 | `src/modules/chat/orchestrator.ts` | Nuevo | Orquestación en dos pasos | II.13 paso 3 |
-| `src/modules/chat/numeric-candidates.ts` | Nuevo | Detector CA-50 | II.13 paso 4 |
-| `src/modules/chat/guard.ts` | Nuevo | Guarda determinística | II.13 paso 5 |
+| `src/modules/chat/numeric-candidates.ts` | Nuevo | Detector CA-50 | Corte limitado de salida/guarda aprobado el 2026-11-06 |
+| `src/modules/chat/guard.ts` | Nuevo | Guarda determinística que consume evidencia candidata | Corte limitado de salida/guarda aprobado el 2026-11-06 |
+| `src/modules/chat/tools/results.ts` | Nuevo/compartido | Ownership del schema y tipo candidatos de evidencia; adaptación candidata | Corte limitado de salida/guarda; no es DTO final de M16c |
 | `src/modules/chat/render.ts` | Nuevo | Presentación y abstención | II.13 paso 6 |
 | `src/modules/chat/actions.ts` | Nuevo | Actions de turno y feedback | II.13 paso 7 |
 | `src/modules/chat/repository.ts` | Compartido con M25a.1 | Registro y voto ya acreditados | II.13 paso 7; no duplica M25a.1 |
@@ -374,8 +396,9 @@ Esta tabla no autoriza la implementación completa mientras el estado siga no ha
 | `src/components/app/chat.module.css` | Modificado si hace falta | Estados visuales de respuesta y feedback | II.13 paso 8 |
 | `tests/unit/chat-context.test.ts` | Nuevo | Límites e invariantes del contexto efímero | Corte limitado aprobado el 2026-11-06; prueba exclusivamente unitaria |
 | `tests/component/chat-page.test.tsx` | Nuevo | Conversación visible de sesión | II.13 paso 8 |
-| `tests/unit/chat-guard.test.ts` | Nuevo | Guarda y casos CA-50b | II.13 paso 9 |
-| `tests/unit/chat-adversarial.test.ts` | Nuevo | Modelo, orquestador y adversarios | II.13 paso 9; separar casos de resultados de M25a.1 |
+| `tests/unit/chat-guard.test.ts` | Nuevo | Guarda y casos CA-50b con fixtures sintéticos | Corte limitado de salida/guarda aprobado el 2026-11-06 |
+| `tests/unit/chat-tools.test.ts` | Modificado/compartido | Adaptación candidata de evidencia | Corte limitado de salida/guarda; solo adaptación |
+| `tests/unit/chat-adversarial.test.ts` | Nuevo futuro | Modelo, orquestador y adversarios | Fuera del corte limitado; no se crea ni restaura ahora |
 | `tests/app/chat-actions.test.ts` | Nuevo | Actions, aislamiento y límites | II.13 paso 9 |
 | `docs/FASES/FASE1/meta_first/vr-02.md` | Nuevo | Evaluación congelada e informe | II.13 paso 10 |
 | `docs/FASES/FASE1/M25a.2/plan.md` | Nuevo | Plan exclusivo del corte unitario | Aprobación expresa del usuario, 2026-11-06 |
@@ -500,9 +523,14 @@ identificador y precisión del modelo, latencia y cumplimiento de cada umbral.
 | D-M25a.2-10 | Separar `500` por pregunta redactada de `12.000` agregados para memoria; redactar antes de validar y rechazar el exceso sin truncado silencioso | Cerrar la discrepancia visible sin duplicar la propiedad de M25a.1 | Usuario | 2026-11-03 |
 | D-M25a.2-11 | Aplicar `4` llamadas a herramientas, `800` tokens por cada llamada al modelo, `1` turno concurrente por usuario y `60` segundos de deadline total | Confirmar los valores de CA-70 asignados a M25a.2 | Usuario | 2026-11-03 |
 | D-M25a.2-12 | Autorizar antes de `G-CHAT-BASE` únicamente el núcleo puro y unitario del contexto conversacional en `context.ts` y su prueba, conforme a D-M25a.2-05 a D-M25a.2-10, sin UI, modelo, integración, persistencia ni contratos externos | Avanzar una pieza independiente sin habilitar M25a.2 completa ni alterar sus dependencias o gates | Usuario | 2026-11-06 |
+| D-M25a.2-13 | Autorizar antes de G-CHAT-BASE únicamente el núcleo puro y unitario de salida estructurada, detección de candidatos y guarda determinística, junto con la reorganización candidata de evidencia ya permitida por M25a.1, usando solo fixtures sintéticos y sin modelo, integración, persistencia ni contratos externos. | Avanzar lógica determinística independiente sin presentar la evidencia candidata como contrato final ni habilitar M25a.2 completa | Usuario | 2026-11-06 |
 
 D-M25a.2-12 reemplaza únicamente el efecto no habilitante de D-M25a.2-02 para estos dos
 archivos y este corte limitado; no altera el estado ni el alcance del resto de la spec.
+
+D-M25a.2-13 autoriza únicamente la lógica pura y unitaria y la dirección de dependencia
+aprobada para la evidencia candidata. No autoriza integración ni convierte esa forma en el
+contrato final de M16c o M25a.1.
 
 ## Preguntas cerradas
 

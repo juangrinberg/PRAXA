@@ -47,6 +47,13 @@ la Enmienda M25a.2 aprobada el 2026-11-06 y limitado al
 del contexto efímero; no autoriza UI, modelo, integración, persistencia ni contratos. La
 microfase M25a.2 completa y sus gates continúan bloqueados.
 
+**M25a.2 — corte anticipado unitario de salida y guarda:** tercer trabajo paralelo autorizado
+por la Enmienda M25a.2 aprobada el 2026-11-06 y limitado al mismo
+[plan del corte](FASES/FASE1/M25a.2/plan.md). Autoriza únicamente salida estructurada,
+detección de candidatos y guarda determinística puras sobre evidencia candidata y fixtures
+sintéticos. No existe integración real ni se autoriza modelo, UI, persistencia o contratos.
+M25a.2 completa y sus gates continúan bloqueados.
+
 M16.2 sigue siendo la siguiente microfase principal habilitada. La implementación completa
 de M25a.1 continúa dependiendo de `G-SYNC`; `G-CHAT-BASE` y M25a.2 siguen bloqueados. Los
 cortes paralelos no modifican el orden M16.2 → M16c → M25a.1 → M25a.2.
