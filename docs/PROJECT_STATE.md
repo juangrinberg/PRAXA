@@ -36,44 +36,17 @@ Después de M16.2, en este orden: M16c, M25a.1, M25a.2 y M28.3a.
 
 ## Trabajo paralelo autorizado
 
-**M25a.1 — corte anticipado determinístico:** trabajo paralelo autorizado por la Enmienda
-M25a.1 aprobada el 2026-11-03 y limitado al
-[plan del corte](FASES/FASE1/M25a.1/plan.md). Esta preparación documental no implementó ni
-cerró el corte; el código candidato previo no constituye evidencia de cierre.
+**M25a.1 — corte anticipado determinístico:** implementado y verificado conforme al
+[plan del corte](FASES/FASE1/M25a.1/plan.md), con
+[evidencia reproducible](FASES/FASE1/M25a.1/sesiones/corte-anticipado-2026-11-07.md).
+Su cierre limitado queda pendiente de aprobación del usuario. M25a.1 completa continúa
+bloqueada y no se aprueba `G-CHAT-BASE`.
 
-**M25a.2 — corte anticipado unitario de contexto:** segundo trabajo paralelo autorizado por
-la Enmienda M25a.2 aprobada el 2026-11-06 y limitado al
-[plan del corte](FASES/FASE1/M25a.2/plan.md). Autoriza únicamente el núcleo puro y unitario
-del contexto efímero; no autoriza UI, modelo, integración, persistencia ni contratos. La
-microfase M25a.2 completa y sus gates continúan bloqueados.
-
-**M25a.2 — corte anticipado unitario de salida y guarda:** tercer trabajo paralelo autorizado
-por la Enmienda M25a.2 aprobada el 2026-11-06 y limitado al mismo
-[plan del corte](FASES/FASE1/M25a.2/plan.md). Autoriza únicamente salida estructurada,
-detección de candidatos y guarda determinística puras sobre evidencia candidata y fixtures
-sintéticos. No existe integración real ni se autoriza modelo, UI, persistencia o contratos.
-M25a.2 completa y sus gates continúan bloqueados.
-
-**M25a.2 — corte anticipado unitario de render determinístico:** cuarto trabajo paralelo
-autorizado por la Enmienda M25a.2 aprobada el 2026-11-06 y limitado al mismo
-[plan del corte](FASES/FASE1/M25a.2/plan.md). Autoriza únicamente el render puro que consume
-la guarda y resultados candidatos ya autorizados para producir una respuesta respaldada o
-una abstención controlada. No autoriza modelo, UI, integración, persistencia ni contratos.
-M25a.2 completa y sus gates continúan bloqueados.
-
-**M25a.2 — corte anticipado unitario de adaptador DeepInfra simulado:** quinto trabajo
-paralelo autorizado por la Enmienda M25a.2 aprobada el 2026-11-06 y limitado al mismo
-[plan del corte](FASES/FASE1/M25a.2/plan.md). Autoriza únicamente el adaptador `server-only`
-con transporte y señal de cancelación inyectados y respuestas sintéticas. No autoriza una
-llamada o secreto real, no acredita al proveedor y no habilita orquestador, UI, integración
-ni `G-VR02`. M25a.2 completa y sus gates continúan bloqueados.
-
-**M25a.2 — corte anticipado final del núcleo de orquestación simulada:** sexto trabajo
-paralelo autorizado por la Enmienda M25a.2 aprobada el 2026-11-06 y limitado al mismo
-[plan del corte](FASES/FASE1/M25a.2/plan.md). Autoriza el recorrido `server-only` con contexto
-validado, modelo y ejecutor inyectados, deadline compartido, guarda y render sobre fixtures
-sintéticos. La integración real con herramientas, proveedor, UI, Actions, repository y
-persistencia continúa bloqueada; no habilita M25a.2, `G-CHAT-BASE` ni `G-VR02`.
+**M25a.2 — núcleo simulado:** contexto, guarda, render, adaptador y orquestador implementados
+y verificados conforme al [plan del corte](FASES/FASE1/M25a.2/plan.md), con
+[evidencia reproducible](FASES/FASE1/M25a.2/sesiones/nucleo-simulado-2026-11-07.md).
+Su cierre limitado queda pendiente de aprobación del usuario. La integración real y M25a.2
+completa continúan bloqueadas; no se aprueban `G-CHAT-BASE` ni `G-VR02`.
 
 M16.2 sigue siendo la siguiente microfase principal habilitada. La implementación completa
 de M25a.1 continúa dependiendo de `G-SYNC`; `G-CHAT-BASE` y M25a.2 siguen bloqueados. Los

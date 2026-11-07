@@ -44,6 +44,7 @@ src/
     tenant/                 K01 TenantContext: actor + empresa, solo en el servidor
     app-data/               datos de las pantallas de `/app`: contrato, lecturas reales y mock
     reporting/contract/     contrato versionado del reporte (sin generación)
+    chat/                    núcleo determinístico y simulado del chat; integración pendiente
     integrations/contract/  contratos K02–K04: intento OAuth, conexión, credencial
     integrations/crypto/    llavero y cifrado autenticado de credenciales
     integrations/db/        cliente PostgreSQL acotado a worker_api
@@ -66,8 +67,6 @@ tests/
 Previsto dentro de `src/modules/`, con rutas sugeridas por el plan:
 
 - `integrations/`: sincronización manual de Insights.
-- `chat/`: redacción, herramientas cerradas, adaptador del modelo, orquestador y guarda de
-  afirmaciones numéricas.
 
 ## Módulos y responsabilidades
 
@@ -85,7 +84,7 @@ Previsto dentro de `src/modules/`, con rutas sugeridas por el plan:
 | `integrations/repository` | Prepara operaciones reutilizables, valida K01 y respuestas, lee y recifra credenciales según versión y estado; ejecuta las operaciones del ciclo de vida por `worker_api`; lee la conexión viva de la empresa con el JWT del usuario | Existe |
 | `integrations/meta` | Versión de la Graph API y URLs en un solo lugar; cliente HTTP con timeout, clasificación de errores y ninguna credencial en las URLs de salida; OAuth, listado de cuentas delegadas, prueba de acceso a Insights, revocación y resultados cerrados | Existe; probado con Meta simulada |
 | `integrations` (resto) | Orquesta selección, reautorización, desconexión y purga perezosa; Server Actions de confirmación y desconexión. La sincronización manual queda prevista | Parcial |
-| `chat` | Consulta en lenguaje natural sobre gasto e impresiones, con cifras verificadas | Previsto |
+| `chat` | Consulta en lenguaje natural sobre gasto e impresiones, con cifras verificadas | Parcial |
 
 La ruta `meta_first` no construye Tiendanube, GA4, reportes publicados, métricas derivadas
 ni base vectorial (spec, sección 2).
@@ -288,7 +287,32 @@ La ruta no tiene workers, colas ni programación automática (spec, sección 2; 
   ejecuta cuando el dueño vuelve a la página de integraciones o inicia una conexión.
 - Una ejecución colgada no bloquea para siempre porque su arrendamiento vence.
 
-## Chat (previsto)
+## Chat (núcleo determinístico y simulado existente; integración prevista)
+
+El núcleo existente se mantiene separado de identidad, base de datos, UI e infraestructura
+externa. Incluye:
+
+- redacción determinística de datos sensibles;
+- configuración compartida de límites y schemas estrictos del catálogo de llamadas;
+- contexto efímero e inmutable compuesto solo por turnos exitosos;
+- schema estructurado de salida y detector de candidatos numéricos;
+- adaptación candidata de resultados, guarda determinística y render seguro con abstención
+  controlada;
+- adaptador `server-only` de DeepInfra probado únicamente con transporte sintético; y
+- orquestador con modelo, ejecutor y señal inyectados, IDs asignados por el servidor y un
+  deadline compartido, cubierto por pruebas unitarias del recorrido sintético.
+
+La integración prevista conserva como pendientes:
+
+- los contratos definitivos de resultados entregados por la sincronización;
+- las herramientas, el ejecutor y los cálculos SQL reales;
+- las Server Actions que construyen K01 para el turno real;
+- el registro por consulta, el voto y el repository;
+- la UI conectada al recorrido;
+- la llamada real a DeepInfra y la verificación del proveedor; y
+- toda persistencia asociada al chat.
+
+El flujo integrado previsto es:
 
 ```
 Server Action del chat ──► K01 ──► límites del turno ──► redacción de la pregunta

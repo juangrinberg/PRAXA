@@ -1,6 +1,8 @@
 # M25a.2 — Plan de cortes anticipados unitarios
 
-**Estado:** APROBADO PARA EJECUCIÓN LIMITADA — NÚCLEO DE IA SIMULADO
+**Estado:** IMPLEMENTADO Y VERIFICADO — NÚCLEO SIMULADO; CIERRE LIMITADO PENDIENTE DE APROBACIÓN DEL USUARIO
+
+**Evidencia:** [núcleo simulado del 2026-11-07](sesiones/nucleo-simulado-2026-11-07.md)
 
 **Aprobación:** usuario, 2026-11-06
 
