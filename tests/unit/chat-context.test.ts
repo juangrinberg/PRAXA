@@ -238,6 +238,40 @@ describe('contexto conversacional efímero', () => {
     );
   });
 
+  it('valida como unknown un snapshot consumido y devuelve solo turnos seguros', () => {
+    const snapshot: unknown = createChatContext([makeTurn(1), makeTurn(2)]);
+
+    const turns = getChatContextTurns(snapshot);
+
+    expect(turns).toEqual([makeTurn(1), makeTurn(2)]);
+    expect(Object.isFrozen(turns)).toBe(true);
+    expect(Object.isFrozen(turns[0])).toBe(true);
+  });
+
+  it('rechaza al consumir snapshots que exceden los límites predeterminados', () => {
+    const turns = Array.from({ length: 7 }, (_, index) => makeTurn(index));
+    const totalCodePoints = turns.reduce(
+      (total, turn) =>
+        total + Array.from(turn.questionRedacted + turn.answerValidated).length,
+      0,
+    );
+
+    expect(() => getChatContextTurns({ turns, totalCodePoints })).toThrow(
+      ChatContextValidationError,
+    );
+  });
+
+  it('rechaza al consumir snapshots con campos adicionales o total manipulado', () => {
+    const valid = createChatContext([makeTurn(1)]);
+
+    expect(() => getChatContextTurns({ ...valid, company_id: 'empresa' })).toThrow(
+      ChatContextValidationError,
+    );
+    expect(() =>
+      getChatContextTurns({ ...valid, totalCodePoints: valid.totalCodePoints + 1 }),
+    ).toThrow(ChatContextValidationError);
+  });
+
   it('copia y congela los turnos recibidos', () => {
     const original = makeTurn(1);
     const initialTurns = [original];

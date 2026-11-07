@@ -173,6 +173,9 @@ export function appendSuccessfulChatTurn(
   return buildContext([...checkedContext.turns, turn], checkedLimits);
 }
 
-export function getChatContextTurns(context: ChatContext): readonly ChatContextTurn[] {
-  return validateContext(context).turns;
+export function getChatContextTurns(
+  context: unknown,
+  limits: ChatContextLimits = DEFAULT_CHAT_CONTEXT_LIMITS,
+): readonly ChatContextTurn[] {
+  return validateContext(context, validateLimits(limits)).turns;
 }

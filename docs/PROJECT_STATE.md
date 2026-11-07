@@ -68,6 +68,13 @@ con transporte y señal de cancelación inyectados y respuestas sintéticas. No 
 llamada o secreto real, no acredita al proveedor y no habilita orquestador, UI, integración
 ni `G-VR02`. M25a.2 completa y sus gates continúan bloqueados.
 
+**M25a.2 — corte anticipado final del núcleo de orquestación simulada:** sexto trabajo
+paralelo autorizado por la Enmienda M25a.2 aprobada el 2026-11-06 y limitado al mismo
+[plan del corte](FASES/FASE1/M25a.2/plan.md). Autoriza el recorrido `server-only` con contexto
+validado, modelo y ejecutor inyectados, deadline compartido, guarda y render sobre fixtures
+sintéticos. La integración real con herramientas, proveedor, UI, Actions, repository y
+persistencia continúa bloqueada; no habilita M25a.2, `G-CHAT-BASE` ni `G-VR02`.
+
 M16.2 sigue siendo la siguiente microfase principal habilitada. La implementación completa
 de M25a.1 continúa dependiendo de `G-SYNC`; `G-CHAT-BASE` y M25a.2 siguen bloqueados. Los
 cortes paralelos no modifican el orden M16.2 → M16c → M25a.1 → M25a.2.

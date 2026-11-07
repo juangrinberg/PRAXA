@@ -1,17 +1,17 @@
 # M25a.2 — Plan de cortes anticipados unitarios
 
-**Estado:** APROBADO PARA EJECUCIÓN LIMITADA — CONTEXTO, GUARDA, RENDER Y ADAPTADOR SIMULADO
+**Estado:** APROBADO PARA EJECUCIÓN LIMITADA — NÚCLEO DE IA SIMULADO
 
 **Aprobación:** usuario, 2026-11-06
 
 **Autoridad:** Enmiendas M25a.2 del 2026-11-06 en
 `docs/FASES/FASE1/meta_first/plan.md` y decisiones `D-M25a.2-12`, `D-M25a.2-13` y
-`D-M25a.2-14` y `D-M25a.2-15` de la spec.
+`D-M25a.2-14`, `D-M25a.2-15` y `D-M25a.2-16` de la spec.
 
 **Límite:** este plan cubre únicamente los cortes puros y unitarios de contexto,
-salida/guarda, render determinístico y adaptador DeepInfra simulado. No cubre M25a.2
-completa, no requiere ni aprueba `G-CHAT-BASE`, no produce `G-VR02` y no habilita trabajo
-sucesor.
+salida/guarda, render determinístico, adaptador DeepInfra simulado y orquestación simulada.
+No cubre M25a.2 completa, no requiere ni aprueba `G-CHAT-BASE`, no produce `G-VR02` y no
+habilita trabajo sucesor.
 
 ## Objetivo
 
@@ -23,16 +23,18 @@ Implementar y verificar exclusivamente:
 3. el render determinístico puro que produce una respuesta respaldada o una abstención
    controlada a partir de la guarda y los resultados candidatos; y
 4. el adaptador `server-only` de DeepInfra verificado únicamente con transporte y señal de
-   cancelación inyectados y respuestas sintéticas.
+   cancelación inyectados y respuestas sintéticas; y
+5. el orquestador `server-only` que une contexto validado, selección, ejecución inyectada,
+   respuesta, guarda y render con fixtures sintéticos.
 
-Ningún bloque integra UI, modelo, servidor, herramientas reales, persistencia o contratos
-externos.
+Ningún bloque integra UI, herramientas reales, persistencia, proveedor real o contratos
+externos. Modelo y ejecutor existen solo como dependencias inyectadas del recorrido sintético.
 
 ## Condición de entrada
 
 - Las Enmiendas M25a.2 del 2026-11-06 están aprobadas y vigentes.
-- `D-M25a.2-05` a `D-M25a.2-10`, `D-M25a.2-12`, `D-M25a.2-13`, `D-M25a.2-14` y
-  `D-M25a.2-15` están aprobadas.
+- `D-M25a.2-05` a `D-M25a.2-10`, `D-M25a.2-12`, `D-M25a.2-13`, `D-M25a.2-14`,
+  `D-M25a.2-15` y `D-M25a.2-16` están aprobadas.
 - La ausencia de `G-CHAT-BASE` no bloquea este corte, pero sí todo trabajo fuera de su lista
   cerrada.
 - Los cambios locales preexistentes se preservan.
@@ -51,6 +53,8 @@ externos.
 - `tests/unit/chat-render.test.ts`
 - `src/modules/chat/llm.ts`
 - `tests/unit/chat-llm.test.ts`
+- `src/modules/chat/orchestrator.ts`
+- `tests/unit/chat-orchestrator.test.ts`
 - `docs/FASES/FASE1/meta_first/plan.md`
 - `docs/FASES/FASE1/M25a.2/spec.md`
 - `docs/FASES/FASE1/M25a.2/plan.md`
@@ -156,6 +160,31 @@ Ningún otro archivo puede modificarse dentro de este corte.
 15. Los resultados exitosos y fallidos quedan congelados.
 16. El corte no acredita disponibilidad, precisión, latencia, esquema real ni `VR-02`.
 
+## Bloque 5 — Orquestación simulada
+
+1. `orchestrator.ts` es `server-only` y recibe modelo, ejecutor y fábrica de señal inyectados.
+2. La entrada estricta contiene únicamente una pregunta redactada no vacía de hasta `500`
+   puntos de código y un snapshot de contexto validado.
+3. Una sola señal creada con el deadline compartido de `60.000` ms se entrega a selección,
+   todas las ejecuciones y respuesta final.
+4. La selección recibe en orden el system prompt, los turnos anteriores exitosos como
+   contexto no autoritativo y la pregunta actual.
+5. La respuesta final recibe únicamente system prompt, pregunta redactada y resultados del
+   turno actual; la memoria anterior nunca se usa como evidencia.
+6. La selección se revalida, admite hasta cuatro llamadas y asigna en servidor `call_1`,
+   `call_2` y sucesivos. Cero llamadas abstiene sin completar; cinco o más se rechazan antes
+   del ejecutor.
+7. Cada resultado valida estructura, ID y nombre. Una excepción o resultado inválido produce
+   `tool_error` sin filtrar detalles.
+8. La salida final pasa por `renderChatResponse`; una cifra inventada o referencia ajena
+   produce abstención controlada.
+9. Solo outcomes `answered` o `answered_partial_coverage` agregan un turno exitoso al
+   contexto. Abstenciones y errores conservan el snapshot previo.
+10. El resultado inmutable incluye respuesta, nuevo contexto, nombres de herramientas,
+    modelo solicitado y modelo reportado o `null`.
+11. Todo el recorrido usa fixtures sintéticos; no ejecuta herramientas, red, SQL ni
+    persistencia reales.
+
 ## Procedimiento TDD
 
 ### Contexto
@@ -197,6 +226,17 @@ Ningún otro archivo puede modificarse dentro de este corte.
 4. Comprobar que no usa `AbortSignal.timeout`, red real, logs ni imports de orquestador, UI,
    Actions, repository o M16c.
 5. Ejecutar la prueba unitaria dirigida.
+
+### Orquestación simulada
+
+1. Escribir primero `tests/unit/chat-orchestrator.test.ts` y los casos limitados de lectura
+   de snapshots en `tests/unit/chat-context.test.ts`.
+2. Recuperar después el candidato histórico de `orchestrator.ts` y registrar un fallo
+   funcional sobre contexto, señal compartida, máximo de llamadas y `nextContext`.
+3. Implementar únicamente `orchestrator.ts` y el ajuste limitado de `context.ts`.
+4. Verificar que no importe UI, Actions, repository o M16c y que no use red, herramientas
+   reales, persistencia, SQL o logs.
+5. Ejecutar las pruebas dirigidas y las regresiones del núcleo.
 
 ### Verificación común
 
@@ -265,10 +305,23 @@ Ningún otro archivo puede modificarse dentro de este corte.
 - HTTP, abort, timeout, transporte y modelo reportado inesperado sin filtraciones;
 - resultados congelados y ninguna llamada real.
 
+### Orquestación simulada
+
+- entrada estricta y snapshot manipulado rechazados;
+- contexto vacío y seis turnos enviados en orden solo a selección;
+- memoria ausente de la respuesta final;
+- una única señal creada con `60.000` ms y compartida por todo el turno;
+- IDs asignados por servidor, cero y cuatro llamadas aceptadas y cinco rechazadas;
+- herramienta, argumentos y resultados inválidos, excepción del ejecutor y fallos del
+  modelo tratados como abstenciones seguras;
+- respuesta completa, parcial y cifra inventada;
+- contexto actualizado solo por respuestas válidas;
+- modelo solicitado/reportado, inmutabilidad y ausencia de logs o filtraciones.
+
 ## Criterio de aceptación
 
-- Las pruebas unitarias dirigidas de contexto, salida, candidatos, guarda y adaptación
-  terminan aprobadas.
+- Las pruebas unitarias dirigidas de contexto, salida, candidatos, guarda, adaptación,
+  render, modelo simulado y orquestación terminan aprobadas.
 - La salida y los claims validan con schemas estrictos y toda afirmación verificable queda
   respaldada o es rechazada.
 - Las referencias solo resuelven contra evidencia sintética del turno actual.
@@ -282,6 +335,9 @@ Ningún otro archivo puede modificarse dentro de este corte.
   entregada por el llamador, sin crear un timeout propio.
 - Toda prueba del adaptador usa transporte sintético; no se acredita al proveedor ni
   `VR-02`.
+- El orquestador usa un solo deadline compartido, revalida selección y resultados, mantiene
+  la memoria fuera de la evidencia final y actualiza contexto únicamente por respuesta
+  aceptada.
 - No existe `chat-adversarial.test.ts` creado o restaurado por este corte.
 - `npm run verify` termina aprobado.
 - `git diff --check` termina aprobado.
@@ -293,12 +349,12 @@ Ningún otro archivo puede modificarse dentro de este corte.
 - UI e historial visual;
 - llamadas reales a DeepInfra, secretos reales, prompts de producción y acreditación del
   proveedor;
-- orquestador, ejecutores y herramientas reales;
+- ejecutores y herramientas reales;
 - Server Actions, feedback y pruebas de aplicación;
 - SQL, migraciones, pgTAP, RPCs, repositories y DTOs;
 - M16c y el resto de M25a.1;
 - `tests/unit/chat-adversarial.test.ts`;
-- consumo del contexto por el modelo; y
+- consumo real del contexto por un proveedor; y
 - VR-02.
 
 ## Condiciones de parada
@@ -307,13 +363,14 @@ Ningún otro archivo puede modificarse dentro de este corte.
 - El contrato exige identidad, tenant, persistencia, red o una integración externa.
 - Una prueba solo puede pasar ampliando el corte.
 - Aparece una contradicción con D-M25a.2-05 a D-M25a.2-10, D-M25a.2-12,
-  D-M25a.2-13, D-M25a.2-14, D-M25a.2-15 o con la ruta vigente.
+  D-M25a.2-13, D-M25a.2-14, D-M25a.2-15, D-M25a.2-16 o con la ruta vigente.
 
 ## Resultado del cierre limitado
 
 El cierre de este plan acredita únicamente los núcleos unitarios del contexto efímero, de
-salida/guarda pura sobre evidencia candidata, del render determinístico puro y del adaptador
-simulado con transporte inyectado. No acredita integración, proveedor real ni un contrato
-final de resultados. M25a.2 completa continúa bloqueada por `G-CHAT-BASE`, la aplicación
+salida/guarda pura sobre evidencia candidata, del render determinístico puro, del adaptador
+simulado con transporte inyectado y del recorrido de orquestación sintético. No acredita
+integración real, proveedor real ni un contrato final de resultados. M25a.2 completa
+continúa bloqueada por `G-CHAT-BASE`, la aplicación
 verificada de `0017`, la aprobación de su spec completa y el resto de sus dependencias. No
 se inicia ninguna tarea sucesora.

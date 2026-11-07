@@ -4,8 +4,8 @@
 > Preparado por autorización expresa del usuario del 2026-11-03 para documentar el trabajo
 > candidato sin iniciar la microfase. Este archivo no habilita M25a.2, no aprueba
 > `G-CHAT-BASE` y no cambia el pipeline. Las únicas implementaciones autorizadas antes de ese
-> gate son los cortes unitarios de contexto, salida/guarda, render determinístico y adaptador
-> DeepInfra simulado aprobados el 2026-11-06.
+> gate son los cortes unitarios de contexto, salida/guarda, render determinístico, adaptador
+> DeepInfra simulado y núcleo de orquestación simulada aprobados el 2026-11-06.
 > M25a.1 y la aplicación posterior de `0017` al proyecto `app` siguen siendo precondiciones
 > de M25a.2 completa.
 
@@ -76,6 +76,19 @@ transporte y señal de cancelación inyectados, respuestas sintéticas y ningún
 No realiza una llamada real ni acredita disponibilidad, precisión, latencia, funcionamiento
 del esquema real o `VR-02`. No aprueba esta spec completa, no habilita M25a.2 ni autoriza
 orquestador, UI, Server Actions, repository, feedback, persistencia o integración.
+
+**Corte anticipado final del núcleo de orquestación simulada aprobado para ejecución
+limitada.** Por decisión expresa del usuario del 2026-11-06, antes de `G-CHAT-BASE` se
+autoriza también el orquestador `server-only` en `src/modules/chat/orchestrator.ts`, su
+prueba dirigida en `tests/unit/chat-orchestrator.test.ts`, el ajuste limitado de
+`src/modules/chat/context.ts` y `tests/unit/chat-context.test.ts` para validar snapshots
+consumidos, y la documentación propia del corte.
+
+Este quinto corte usa modelo y ejecutor inyectados, una única señal compartida por turno y
+fixtures sintéticos para recorrer contexto, selección, ejecución inyectada, respuesta,
+guarda y render. No usa herramientas reales ni contratos de M16c, no aprueba esta spec
+completa y no habilita M25a.2, `G-CHAT-BASE` o `G-VR02`. Tampoco autoriza UI, Server Actions,
+repository, feedback, SQL, persistencia, proveedor real ni pruebas de aplicación.
 
 **Hash de contenido:** pendiente. Debe calcularse cuando se resuelvan las preguntas abiertas
 y antes de la auditoría formal, sin la línea de estado:
@@ -550,6 +563,7 @@ identificador y precisión del modelo, latencia y cumplimiento de cada umbral.
 | D-M25a.2-13 | Autorizar antes de G-CHAT-BASE únicamente el núcleo puro y unitario de salida estructurada, detección de candidatos y guarda determinística, junto con la reorganización candidata de evidencia ya permitida por M25a.1, usando solo fixtures sintéticos y sin modelo, integración, persistencia ni contratos externos. | Avanzar lógica determinística independiente sin presentar la evidencia candidata como contrato final ni habilitar M25a.2 completa | Usuario | 2026-11-06 |
 | D-M25a.2-14 | Autorizar antes de G-CHAT-BASE únicamente el render determinístico puro que transforma una salida validada y resultados candidatos del turno en respuesta respaldada o abstención controlada, sin modelo, UI, integración, persistencia ni contratos externos. | Completar el recorrido determinístico puro sin habilitar M25a.2 completa ni depender de contratos externos | Usuario | 2026-11-06 |
 | D-M25a.2-15 | Autorizar antes de G-CHAT-BASE únicamente el adaptador server-only de DeepInfra con modelo fijo, salida estructurada, transporte y señal de cancelación inyectados y pruebas sintéticas, sin llamada real, orquestación, UI, persistencia ni acreditación del proveedor. | Verificar el límite local del adaptador sin presentar pruebas sintéticas como validación del proveedor | Usuario | 2026-11-06 |
+| D-M25a.2-16 | Autorizar antes de G-CHAT-BASE el orquestador server-only del núcleo de IA con contexto validado, modelo y ejecutor inyectados, presupuesto compartido del turno, IDs asignados por el servidor, guarda y render determinísticos, exclusivamente con fixtures sintéticos y sin UI, Actions, persistencia ni contratos externos. | Verificar el recorrido completo del núcleo con dependencias sintéticas sin habilitar integración real ni alterar los gates | Usuario | 2026-11-06 |
 
 D-M25a.2-12 reemplaza únicamente el efecto no habilitante de D-M25a.2-02 para estos dos
 archivos y este corte limitado; no altera el estado ni el alcance del resto de la spec.
@@ -565,6 +579,10 @@ un contrato final.
 D-M25a.2-15 autoriza únicamente el adaptador aislado con transporte sintético. No autoriza
 una llamada real, el uso de secretos reales ni acreditar disponibilidad, precisión,
 latencia, esquema real o `VR-02`.
+
+D-M25a.2-16 autoriza únicamente el recorrido `server-only` con modelo y ejecutor inyectados,
+contexto validado y fixtures sintéticos. No autoriza herramientas reales, UI, Actions,
+persistencia, proveedor real ni contratos externos.
 
 ## Preguntas cerradas
 
