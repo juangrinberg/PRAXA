@@ -1,8 +1,13 @@
 # M25a.2 — Plan de cortes anticipados unitarios
 
-**Estado:** IMPLEMENTADO Y VERIFICADO — NÚCLEO SIMULADO; CIERRE LIMITADO PENDIENTE DE APROBACIÓN DEL USUARIO
+**Estado:** IMPLEMENTADO Y VERIFICADO — NÚCLEO SIMULADO; CIERRE LIMITADO APROBADO POR EL USUARIO EL 2026-11-07
 
 **Evidencia:** [núcleo simulado del 2026-11-07](sesiones/nucleo-simulado-2026-11-07.md)
+
+**Base verificada del cierre:** `f8a0b8bce563456365217b86bc6d91a116d78aae`
+
+**Alcance de aprobación:** solo el cierre limitado; no aprueba M25a.1 completa, M25a.2
+completa, `G-CHAT-BASE` ni `G-VR02`.
 
 **Aprobación:** usuario, 2026-11-06
 

@@ -14,6 +14,15 @@ externa:
 El recorrido verificado une contexto, selección, ejecución inyectada, respuesta, guarda,
 render y actualización del contexto sin realizar integración real.
 
+## Aprobación del cierre limitado
+
+Fecha: `2026-11-07`.
+
+> “Apruebo el cierre limitado verificado de los cortes anticipados de M25a.1 y del núcleo simulado de M25a.2 en el commit `f8a0b8bce563456365217b86bc6d91a116d78aae`, sin aprobar las fases completas ni sus gates.”
+
+El commit aprobado es `f8a0b8bce563456365217b86bc6d91a116d78aae`. Esta aprobación se
+limita a los cortes verificados y no alcanza M25a.1 completa, M25a.2 completa ni sus gates.
+
 ## Revisión de Git
 
 - Rama verificada: `mf/M25a1-independent`.

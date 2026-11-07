@@ -39,13 +39,13 @@ Después de M16.2, en este orden: M16c, M25a.1, M25a.2 y M28.3a.
 **M25a.1 — corte anticipado determinístico:** implementado y verificado conforme al
 [plan del corte](FASES/FASE1/M25a.1/plan.md), con
 [evidencia reproducible](FASES/FASE1/M25a.1/sesiones/corte-anticipado-2026-11-07.md).
-Su cierre limitado queda pendiente de aprobación del usuario. M25a.1 completa continúa
-bloqueada y no se aprueba `G-CHAT-BASE`.
+Su cierre limitado fue aprobado por el usuario el 2026-11-07. M25a.1 completa continúa
+bloqueada y no se aprueban `G-CHAT-BASE` ni `G-VR02`.
 
 **M25a.2 — núcleo simulado:** contexto, guarda, render, adaptador y orquestador implementados
 y verificados conforme al [plan del corte](FASES/FASE1/M25a.2/plan.md), con
 [evidencia reproducible](FASES/FASE1/M25a.2/sesiones/nucleo-simulado-2026-11-07.md).
-Su cierre limitado queda pendiente de aprobación del usuario. La integración real y M25a.2
+Su cierre limitado fue aprobado por el usuario el 2026-11-07. La integración real y M25a.2
 completa continúan bloqueadas; no se aprueban `G-CHAT-BASE` ni `G-VR02`.
 
 M16.2 sigue siendo la siguiente microfase principal habilitada. La implementación completa

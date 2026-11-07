@@ -1,8 +1,13 @@
 # M25a.1 — Plan del corte anticipado determinístico
 
-**Estado:** IMPLEMENTADO Y VERIFICADO — CIERRE LIMITADO PENDIENTE DE APROBACIÓN DEL USUARIO
+**Estado:** IMPLEMENTADO Y VERIFICADO — CIERRE LIMITADO APROBADO POR EL USUARIO EL 2026-11-07
 
 **Evidencia:** [corte anticipado del 2026-11-07](sesiones/corte-anticipado-2026-11-07.md)
+
+**Base verificada del cierre:** `f8a0b8bce563456365217b86bc6d91a116d78aae`
+
+**Alcance de aprobación:** solo el cierre limitado; no aprueba M25a.1 completa, M25a.2
+completa, `G-CHAT-BASE` ni `G-VR02`.
 
 **Aprobación:** usuario, 2026-11-03
 
