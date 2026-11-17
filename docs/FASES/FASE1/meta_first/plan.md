@@ -48,6 +48,10 @@ Cada una es una microfase única por etapas, con excepción expresa al límite d
 
 La enmienda **no aprueba las specs ni los planes de `M16e` y `M16f`**, ni el acta de datos ampliada. Las decisiones 2 a 6 de §7 de la propuesta quedan como preguntas abiertas de esas specs. `SECURITY.md`, `ARCHITECTURE.md` y el acta `M03a` se actualizan dentro de cada microfase, que los lista como archivos previstos. **El texto enmendado es vigente.**
 
+**Enmienda M26b — Estrategias publicitarias verificables, aprobada por el usuario el 2026-11-16** ([propuesta](revisiones/propuesta-enmienda-m26b-estrategias.md)): incorpora `M26b.1` (motor, adaptador y pruebas) y `M26b.2` (interfaz, integración, demo y gate), ambas sin excepción al límite de 8 horas. Agrega DEC-26, CA-82 a CA-94, `G-STRATEGY-ENGINE` y `G-STRATEGIES`. M26b.1 queda habilitada por `G-DIAG` y planificada en paralelo con M16f; M26b.2 requiere `G-STRATEGY-ENGINE`; `G-ANOMALIES` se exige solo para cerrar `G-STRATEGIES`, que se suma a las dependencias de M28.3a. El alcance es determinístico, manual, sin LLM autoritativo, persistencia, migraciones, RPC ni escrituras externas. El paralelismo es solo de planificación y no deroga la ejecución de una microfase por vez y a pedido del usuario. Esta enmienda **no aprueba las specs ni los planes hijos, no autoriza implementación por sí sola y no cierra gates**. **El texto enmendado es vigente.**
+
+**Segunda enmienda M26b — Unificación, aprobada por el usuario el 2026-11-16** ([enmienda](revisiones/enmienda-m26b-unificacion.md)): reemplaza M26b.1/M26b.2 por una única microfase `M26b`, una spec y un plan. Aprueba una excepción expresa al límite de ocho horas y deja D-M26b-08 histórica y superada, sin reducir las 18 decisiones originales, 22 criterios ni 29 pruebas. `G-STRATEGY-ENGINE` se conserva como checkpoint interno que no cierra M26b ni habilita otra microfase; `G-STRATEGIES` sigue siendo el único gate final. Esta enmienda no aprueba la spec o el plan unificados, no autoriza código y no cierra gates. **El texto enmendado es vigente y prevalece sobre las referencias M26b.1/M26b.2 de la primera enmienda.**
+
 ---
 
 # Parte I — Enmienda 1 al ROADMAP v2.3
@@ -80,6 +84,7 @@ La enmienda **no aprueba las specs ni los planes de `M16e` y `M16f`**, ni el act
 | — | `M26a` — Diagnóstico de Meta Ads | Nueva (enmienda del 2026-11-11) |
 | `M16` (Tiendanube) | `M16e` — Conector Tiendanube y cohortes de compradores | Nueva (enmienda del 2026-11-14) |
 | `M16` (GA4) | `M16f` — Conector GA4 y comparación entre fuentes | Nueva (enmienda del 2026-11-14) |
+| — | `M26b` — Estrategias publicitarias verificables | Nueva; después de `G-DIAG`, planificada en paralelo con M16f; checkpoint interno y gate final |
 | `M28.2` — Despliegue | `M28.2a` — Entorno del piloto | Adelanta un despliegue mínimo |
 | `M28.3` — Guion de demostración | `M28.3a` — Demo con el dueño y cierre | Nueva |
 
@@ -93,7 +98,7 @@ La enmienda **no aprueba las specs ni los planes de `M16e` y `M16f`**, ni el act
 - workers, colas o programación automática;
 - distribución pública de las apps de Tiendanube y Google (homologación, verificación de marca) y análisis por persona con eventos crudos de GA4 (BigQuery Export, User-ID);
 - reportes publicados;
-- recomendaciones y explicaciones causales; las comparaciones determinísticas versionadas de M25b son la única ampliación de métricas derivadas;
+- recomendaciones y explicaciones causales, salvo la excepción acotada de M26b: recomendaciones manuales, determinísticas y versionadas desde evidencia propia, con catálogo cerrado, sin montos ni porcentajes, causalidad, rentabilidad, promesas ni LLM autoritativo;
 - base vectorial.
 
 ## I.2 Mapa de la ruta
@@ -115,6 +120,9 @@ flowchart LR
   L --> P["M26a Diagnóstico de Meta Ads"]
   P --> Q["M16e Tiendanube"]
   Q --> R["M16f GA4 y comparación"]
+  P --> S["M26b Estrategias verificables"]
+  S --> N
+  M -. "G-ANOMALIES: solo cierre de G-STRATEGIES" .-> S
   R --> N["M28.3a Demo y cierre"]
   M --> N
   O["M16d App Review — fuera de la ruta"] -.-> N
@@ -139,10 +147,12 @@ flowchart LR
 | `G-VR01` | `M16.2` | `M16c` |
 | `G-SYNC` | `M16c` | `M25a` y `M25b` en paralelo |
 | `G-CHAT` | `M25a` | `M26a` |
-| `G-ANOMALIES` | `M25b` | `M28.3a`, junto con `G-CHAT`, `G-DIAG`, `G-TIENDA` y `G-GA4-FUSION` |
-| `G-DIAG` | `M26a` | `M16e` |
+| `G-ANOMALIES` | `M25b` | `M28.3a` y el cierre de `G-STRATEGIES`; no el comienzo de M26b ni su checkpoint interno |
+| `G-DIAG` | `M26a` | `M16e` y `M26b` |
+| `G-STRATEGY-ENGINE` | checkpoint interno de `M26b` | Continuación expresa a interfaz/demo dentro de M26b; no cierra la microfase ni habilita una sucesora |
 | `G-TIENDA` | `M16e` | `M16f` |
 | `G-GA4-FUSION` | `M16f` | `M28.3a`, junto con `G-CHAT` y `G-ANOMALIES` |
+| `G-STRATEGIES` | `M26b` | `M28.3a`, junto con todas sus dependencias vigentes |
 | `G-DEMO` | `M28.3a`, al completar la demostración | Cierre de la ruta. El piloto sigue hasta su fin, y entonces se ejecuta CA-67 (DEC-20) |
 
 ## I.4 Microfases
@@ -399,7 +409,7 @@ Las tres etapas se ejecutan en orden, en una sola corrida de `/microfase M16c` e
 | **Criterio de aceptación** | CA-74 a CA-81 y CB-01 a CB-06. CPA se omite si falta compra explícita o atribución compatible; el demo nunca se mezcla con datos reales. |
 | **Pruebas** | Unitarias, componentes, aplicación focalizada contra el desechable y recorrido manual. |
 | **Condición para avanzar** | `G-ANOMALIES`. |
-| **Dependencias / habilita** | `G-SYNC` / `M28.3a` junto con `G-CHAT` |
+| **Dependencias / habilita** | `G-SYNC` / `M28.3a` junto con `G-CHAT`, y el cierre de `G-STRATEGIES` mediante `G-ANOMALIES` |
 | **Intervención requerida del usuario** | Aprobar documentos; hacer commit, push, PR, integración, despliegue y aprobar el gate. |
 
 ### M26a — Diagnóstico de Meta Ads
@@ -413,8 +423,8 @@ Las tres etapas se ejecutan en orden, en una sola corrida de `/microfase M16c` e
 | **Evidencia de cierre** | `sesiones/M26a.md`: comandos, resultados, fixtures y evaluación sintética; capturas redactadas de estados y PDF; revisión visible del usuario de PDF sintéticos; recorrido real sin actividad registrado sin simular valor comercial. |
 | **Criterio de aceptación** | Informe de 28 días con cobertura y procedencia; ninguna cifra autoritativa sale del modelo; hechos y recomendaciones ligados a evidencia; cero actividad y datos parciales honestos; aislamiento por empresa; reemplazo atómico; PDF fiel; retención y visibilidad decididas; prueba adversaria de web y proveedor. |
 | **Pruebas** | `npm run verify`, `npm run db:check:test`, `npm run test:policies`, `npm run test:app`, `npm run test:eval` para el diagnóstico, inspección manual de PDF y recorrido de UI. Ninguna prueba positiva obligatoria se omite por falta de configuración. |
-| **Condición para avanzar** | `G-DIAG` aprobado por el usuario tras spec/plan auditados, implementación verificada y revisión de PDF. Habilita `M16e` (enmienda de conectores del 2026-11-14). La falta de actividad real limita la validación de valor, no se oculta. |
-| **Dependencias / habilita** | `G-SYNC` y `G-CHAT` / `M16e`. |
+| **Condición para avanzar** | `G-DIAG` aprobado por el usuario tras spec/plan auditados, implementación verificada y revisión de PDF. Habilita `M16e` (enmienda de conectores del 2026-11-14) y `M26b` (segunda enmienda M26b del 2026-11-16). La falta de actividad real limita la validación de valor, no se oculta. |
+| **Dependencias / habilita** | `G-SYNC` y `G-CHAT` / `M16e` y `M26b`. |
 | **Intervención requerida del usuario** | Aprobar enmienda de ruta, spec y plan; crear y configurar la cuenta/clave de Anthropic sin compartirla por chat; aprobar acta actualizada y comunicar transferencia al dueño; aplicar migración en desechable y `app`; publicar cuando corresponda; revisar PDFs sintéticos y aprobar `G-DIAG`. |
 
 ### M16e — Conector Tiendanube y cohortes de compradores
@@ -447,19 +457,34 @@ Las tres etapas se ejecutan en orden, en una sola corrida de `/microfase M16c` e
 | **Dependencias / habilita** | `G-TIENDA` / `M28.3a`, junto con `G-CHAT` y `G-ANOMALIES`. |
 | **Intervención requerida del usuario** | Crear y configurar el proyecto de Google Cloud y la pantalla de consentimiento. Habilitar las APIs Data y Admin. Registrar la URI y el dominio, y agregar testers. Cargar las credenciales fuera del chat. Garantizar acceso de lectura a la propiedad. Revisar con el dueño la medición y el consentimiento. Aprobar acta, spec y plan. Aplicar migraciones y publicar. |
 
+### M26b — Estrategias publicitarias verificables
+
+| Campo | Contenido |
+|---|---|
+| **ID** | `M26b` — microfase única por etapas, con excepción expresa al límite de ocho horas aprobada por el usuario el 2026-11-16. No se vuelve a dividir. |
+| **Objetivo** | Construir motor y adaptador determinísticos y exponer su salida en una pantalla protegida con estados honestos, demo sintética separada, recorrido real y evidencia para decidir `G-STRATEGIES`. |
+| **Implementación requerida** | Contrato Zod, R1–R4, aritmética decimal, orden/deduplicación/truncamiento, adaptador server-only y reutilización de M25b/M26a; página, navegación, tarjetas accesibles, enlace a Diagnóstico, demo exclusiva; pruebas unitarias, componentes, app, aislamiento, RLS, seguridad, rendimiento y cero escrituras. |
+| **Procedimiento del asistente** | Spec y plan únicos aprobados antes del código; TDD; completar y verificar motor/adaptador; detenerse para la aprobación expresa del checkpoint `G-STRATEGY-ENGINE`; continuar con interfaz/demo solo a pedido expreso dentro de la misma microfase; no recalcular reglas en UI ni mezclar demo/datos reales. El paralelismo con M16f es solo de planificación. |
+| **Evidencia de cierre** | `M26b/sesiones/M26b.md`: comandos/resultados reproducibles, trazabilidad 22/29, checkpoint interno, Data API real contra el desechable, rendimiento máximo, pruebas remotas/RLS/seguridad, recorridos real/demo y estado de validación comercial, sin secretos, UUID reales o escrituras. |
+| **Criterio de aceptación** | CA-82 a CA-94 y los 22 criterios operativos satisfechos; salida determinística; interfaz sin autoridad paralela; archivos limitados a II.14d. |
+| **Pruebas** | Unitarias y componentes focales; regresiones M25b/M26a; `npm run db:check:test`; `npm run test:policies`; `npm run test:app -- tests/app/meta-strategies.test.ts`; `npm run verify`; rendimiento; recorrido autenticado real y demo. La demo no sustituye suites. |
+| **Condición para avanzar** | Checkpoint interno `G-STRATEGY-ENGINE` después del motor/adaptador. Gate final `G-STRATEGIES` solo con checkpoint, `G-ANOMALIES`, todas las pruebas y ambos recorridos; puede cerrar sin actividad suficiente solo registrando «sin validación comercial». |
+| **Dependencias / habilita** | `G-DIAG` y código M25b integrado para comenzar; `G-ANOMALIES` solo para el gate final / `M28.3a` mediante `G-STRATEGIES`. No depende de GA4. |
+| **Intervención requerida del usuario** | Aprobar spec y plan únicos; pedir implementación; aprobar el checkpoint; pedir la continuación a interfaz/demo; coordinar ambos recorridos; confirmar `G-ANOMALIES` y aprobar `G-STRATEGIES`. No compartir secretos ni implementar código. |
+
 ### M28.3a — Demo con el dueño y cierre del piloto
 
 | Campo | Contenido |
 |---|---|
 | **ID** | `M28.3a` — ≤8 h |
 | **Objetivo** | Cumplir el criterio de salida (DEC-01). La microfase se cierra al completar la demostración (DEC-20). Al finalizar el piloto, se borra todo con CA-67. |
-| **Implementación requerida** | Guion de la demo. Recorrido completo del dueño con el usuario creado en `M16.2`, incluidas las conexiones de Tiendanube y GA4 (enmienda de conectores del 2026-11-14). El cierre con CA-67 desconecta y purga también Tiendanube y GA4, según lo que fijen las specs de `M16e` y `M16f`. Evidencia redactada. Paso a Supabase Pro cuando el dueño use el piloto sin acompañamiento (DEC-08). Procedimiento de cierre del piloto con CA-67, que se ejecuta al finalizar el piloto. |
+| **Implementación requerida** | Guion de la demo. Recorrido completo del dueño con el usuario creado en `M16.2`, incluidas las conexiones de Tiendanube y GA4 (enmienda de conectores del 2026-11-14) y la pantalla de Estrategias con su estado de validación comercial (enmienda M26b del 2026-11-16). El cierre con CA-67 desconecta y purga también Tiendanube y GA4, según lo que fijen las specs de `M16e` y `M16f`. Evidencia redactada. Paso a Supabase Pro cuando el dueño use el piloto sin acompañamiento (DEC-08). Procedimiento de cierre del piloto con CA-67, que se ejecuta al finalizar el piloto. |
 | **Procedimiento del asistente** | Preparar el guion y la lista de verificación. Durante la demo, no tocar datos reales fuera de la aplicación. |
 | **Evidencia de cierre** | Lista de verificación de la demo, redactada. Al finalizar el piloto, lista de verificación de CA-67, incluida la solicitud a Resend y su respuesta o estado pendiente, sin datos de los mensajes. |
 | **Criterio de aceptación** | El dueño completó el recorrido con su propio login. Al finalizar el piloto, y después de los pasos locales de CA-67, no quedan filas de la empresa ni objetos en su carpeta de `avatars`, y el usuario está eliminado. La gestión ante Resend está documentada sin presentar una solicitud pendiente como borrado confirmado. |
 | **Pruebas** | La lista de verificación; `tests/app/closure-storage.test.ts` en el proyecto desechable para el borrado de fotos por Storage API. |
 | **Condición para avanzar** | `G-DEMO` al completar la demostración. |
-| **Dependencias / habilita** | `G-CHAT`, `G-ANOMALIES`, `G-DIAG`, `G-TIENDA` y `G-GA4-FUSION` / — (enmienda de conectores del 2026-11-14) |
+| **Dependencias / habilita** | `G-CHAT`, `G-ANOMALIES`, `G-DIAG`, `G-TIENDA`, `G-GA4-FUSION` y `G-STRATEGIES` / — (enmiendas de conectores del 2026-11-14 y M26b del 2026-11-16) |
 | **Intervención requerida del usuario** | Coordinar con el dueño, ejecutar los pasos de CA-67 que requieren dashboard, quitar al dueño como tester y solicitar a Resend el borrado anticipado de los mensajes afectados si aún los conserva. |
 
 ### M16d — App Review y Business Verification (fuera de la ruta)
@@ -938,6 +963,29 @@ No se reutiliza el esquema de Meta mediante `default 'meta'`.
 
 ---
 
+## II.14d `M26b` — Estrategias publicitarias verificables
+
+Segunda enmienda M26b del 2026-11-16. `docs/FASES/FASE1/M26b/spec.md` es la única spec y está `APROBADA`; el plan único está `APROBADO` tras `plan-audit-2.md` y la aprobación expresa del usuario. La excepción de tamaño no autoriza reducir controles ni continuar automáticamente entre etapas.
+
+**Procedimiento:** (1) contratos y pruebas rojas; reglas/motor puro; adaptador server-only y exports compatibles; pruebas remotas de tenant/RLS/cero escrituras; rendimiento y evidencia focal; (2) detenerse y pedir aprobación de `G-STRATEGY-ENGINE`; (3) solo por pedido expreso, pruebas rojas de estados/sesión, demo, página, navegación y tarjetas que consumen sin recalcular; (4) regresiones completas, recorridos real/demo, documentación y gate final; después del commit completo del usuario se ejecutan las revisiones finales del pipeline.
+
+**Archivos autorizados:**
+
+- pipeline y evidencia: `docs/FASES/FASE1/M26b/{spec.md,plan.md,revisiones/*.md,sesiones/M26b.md}`;
+- motor/adaptador/demo: `src/modules/strategies/{contract,rules,engine,load,index,demo}.ts`;
+- exports/helpers compatibles: `src/modules/anomalies/{load,index}.ts` y `src/modules/diagnostics/{eligibility,evidence,index}.ts`, sin cambiar contratos aprobados ni agregar SQL;
+- página/UI: `src/app/(app)/app/estrategias/page.tsx`, `src/components/app/{estrategias.tsx,estrategias.module.css,shell.tsx}`;
+- pruebas: `tests/unit/meta-strategies.test.ts`, `tests/unit/meta-anomalies.test.ts`, `tests/unit/diagnostics-evidence.test.ts`, `tests/app/meta-strategies.test.ts`, `tests/component/app-estrategias.test.tsx` y `tests/component/app-paginas-sesion.test.tsx`;
+- seguimiento: `docs/ARCHITECTURE.md` cuando el componente/flujo pase a existir, `docs/PROJECT_STATE.md` al cambiar estado/gate y `docs/HALLAZGOS.md` solo ante un hallazgo nuevo.
+
+No están autorizados migraciones, RPC, funciones SQL, `worker_api`, llamadas nuevas a Meta, LLM, chat, Tiendanube, GA4, persistencia ni escrituras externas. La UI no recalcula reglas y la demo corta antes de K01 y cualquier lectura real.
+
+**Checkpoint interno:** unitarias focales, `db:check:test`, `test:policies`, `test:app -- tests/app/meta-strategies.test.ts`, `verify`, rendimiento y evidencia del motor/adaptador. El usuario aprueba `G-STRATEGY-ENGINE`; M26b sigue abierta y solo continúa a interfaz/demo por pedido expreso. `G-ANOMALIES` no es requisito de este checkpoint. No se ejecutan aquí `/implementation-review` ni `/qa-review`, porque revisan la microfase completa.
+
+**Verificación y cierre:** repetir todas las suites; componentes focales; regresión del motor; recorrido autenticado real y demo sintética. Con toda M26b verificada, el usuario commitea la implementación completa y recién entonces se ejecutan `/implementation-review` y `/qa-review`, como pasos 10 y 11 del pipeline y sobre el mismo commit limpio. `G-STRATEGIES` requiere checkpoint interno y `G-ANOMALIES`; puede cerrar sin actividad real suficiente solo con «sin validación comercial». La demo no sustituye ninguna suite.
+
+---
+
 ## II.15 `M28.3a` — Demo con el dueño y cierre
 
 > Antes `II.14`; las referencias a `II.14` en documentos anteriores a la enmienda de `M26a` se refieren a esta demo.
@@ -945,11 +993,12 @@ No se reutiliza el esquema de Meta mediante `default 'meta'`.
 | Paso | Quién | Acción | Verificación |
 |---:|---|---|---|
 | 1 | Asistente | Guion de la demo y lista de verificación, sin datos reales | `docs/FASES/FASE1/meta_first/demo.md` |
-| 2 | Usuario | Confirmar `G-CHAT`, `G-ANOMALIES`, `G-DIAG`, `G-TIENDA` y `G-GA4-FUSION`, que el dueño sigue siendo tester y que tiene control total de su portfolio | Checklist |
+| 2 | Usuario | Confirmar `G-CHAT`, `G-ANOMALIES`, `G-DIAG`, `G-TIENDA`, `G-GA4-FUSION` y `G-STRATEGIES`, que el dueño sigue siendo tester y que tiene control total de su portfolio | Checklist |
 | 3 | Dueño | Iniciar sesión con el usuario creado en `M16.2` (no hay alta nueva) | Login sobre el dominio |
 | 4 | Dueño | Verificar la conexión o reconectarla si quedó en `needs_reauth` | Conexión `active` |
-| 5 | Dueño | Sincronizar y consultar el chat | Respuestas con período, zona, cobertura y frescura |
+| 5 | Dueño | Sincronizar, consultar el chat y recorrer Estrategias con datos reales o su estado honesto de insuficiencia | Respuestas y recomendaciones con período, evidencia, cobertura, frescura y estado de validación comercial |
 | 6 | Dueño | Marcar respuestas como útiles o no útiles | Registros con `feedback` |
+| 6a | Dueño y usuario | Recorrer la demo sintética de Estrategias, separada de los datos reales | Banner de datos ficticios, retorno inequívoco y salida determinística |
 | 7 | Usuario | Si el dueño va a seguir usándolo sin acompañamiento, pasar Supabase a Pro | DEC-08 |
 | 8 | Asistente | Evidencia redactada: pasos completados, conteos de consultas por resultado y motivo, sin preguntas completas, montos ni identificadores | Informe |
 
@@ -1002,6 +1051,7 @@ El detalle y los criterios de aceptación están en la spec v1.0.
 | DEC-21 | Umbrales de VR-02 adoptados como criterios iniciales |
 | DEC-22 | Catálogo de Insights ampliados, granularidad y agregación: §11 de la spec; cortes y archivos: ficha M16c e II.11 |
 | DEC-25 | Detector de anomalías determinístico y reutilizable, paralelo a M25a; CA-74 a CA-81 y II.13c |
+| DEC-26 | Estrategias publicitarias verificables en una única M26b, con excepción expresa al límite de ocho horas: motor determinístico, manual, versionado, sin LLM autoritativo, persistencia ni escrituras externas; después de `G-DIAG`; `G-STRATEGY-ENGINE` como checkpoint interno; `G-ANOMALIES` requerido para cerrar el gate final `G-STRATEGIES`; `G-STRATEGIES` requerido por M28.3a; CA-82 a CA-94 y II.14d |
 | D2 | Sin worker: la sincronización es manual y la limitación se declara en la interfaz |
 | K01 | `M05.1.1` entra en la ruta como primer contrato |
 
@@ -1025,6 +1075,7 @@ El detalle y los criterios de aceptación están en la spec v1.0.
 | `M26a` | Aprobar la spec y el plan; crear la cuenta de Anthropic y cargar la clave sin compartirla por chat; aprobar de nuevo el acta y comunicar al dueño la transferencia a Anthropic antes de enviar datos reales; aplicar la migración en el desechable y en `app`; revisar los PDF sintéticos y aprobar `G-DIAG` |
 | `M16e` | Aprobar spec, plan y acta ampliada, y comunicarla al dueño; crear la app en el Portal de Socios de Tiendanube, con scopes y URLs de instalación y privacidad; cargar credenciales fuera del chat; obtener la autorización del dueño; aplicar migraciones, publicar y aprobar `G-TIENDA` |
 | `M16f` | Configurar Google Cloud, la pantalla de consentimiento y las APIs Data y Admin; registrar URI y testers; cargar credenciales fuera del chat; garantizar acceso a la propiedad; revisar medición y consentimiento con el dueño; aprobar documentos, migrar, publicar y aprobar `G-GA4-FUSION` |
+| `M26b` | Aprobar spec y plan únicos; pedir implementación; revisar motor/adaptador y aprobar `G-STRATEGY-ENGINE`; pedir expresamente continuar con interfaz/demo; coordinar publicación y recorrido real; recorrer la demo; verificar `G-ANOMALIES` y aprobar `G-STRATEGIES` |
 | `M28.3a` | Coordinar la demostración. Pasar a Supabase Pro si el dueño lo va a usar sin acompañamiento |
 | Fin del piloto | Ejecutar los pasos de CA-67 que requieren dashboard y quitar al dueño como tester |
 | Para escalar (fuera de la ruta) | `M16d`: Business Verification, dominio y App Review |
@@ -1055,6 +1106,7 @@ Ninguna clave se pega en el chat.
 | `M26a` | `test:policies`, `test:app`, `test:eval` del diagnóstico, inspección manual de PDF y recorrido de la pantalla |
 | `M16e` | `db:check:test`, `test:policies`, `test:app` en cada control de etapa; caso real con pedidos y caso de privacidad |
 | `M16f` | `db:check:test`, `test:policies`, `test:app`; `checkCompatibility` y preflight de instrumentación; lectura y comparación reales |
+| `M26b` | Para el checkpoint y el cierre: `db:check:test`, `test:policies`, `test:app -- tests/app/meta-strategies.test.ts`, unitarias/componentes focales, regresiones M25b/M26a/motor, rendimiento máximo y `verify`; para el gate final, recorrido autenticado real y demo sintética |
 | `M28.3a` | Checklists de la demo y del cierre |
 
 Toda evidencia registra los comandos y sus resultados reales. Nada se declara probado si no se ejecutó (CB-05). Un gate no se aprueba si una prueba requerida se omitió por falta de configuración (CB-06).
@@ -1149,6 +1201,7 @@ IDs sugeridos. Si chocan con los existentes, se sigue la numeración vigente.
 | `M26a` | El dueño genera, lee y descarga un diagnóstico de 28 días de su cuenta de Meta, al aprobar `G-DIAG` |
 | `M16e` | La tienda conectada, con ventas pagadas, cohortes de compradores y productos vendidos, con cobertura |
 | `M16f` | Visitas, embudo y cohortes de visitantes de GA4, comparados con la tienda y con Meta solo donde hay clave verificada |
+| `M26b` | Motor server-only y pantalla de Estrategias con evidencia, acciones manuales, estados honestos y demo sintética separada, sin salida LLM |
 | `M28.3a` | La demostración con el dueño. El piloto sigue hasta su fin |
 
 Si hay que elegir qué llega primero a una demostración, son `M16.1` y `M16.2`: prueban el conector.

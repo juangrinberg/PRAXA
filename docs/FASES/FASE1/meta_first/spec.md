@@ -19,6 +19,10 @@ reutilizable y una demostración sintética separada. No modifica diagnóstico, 
 no escribe ni consulta Meta. Rigen DEC-25 y CA-74 a CA-81; evidencia de la decisión en
 [la propuesta](revisiones/propuesta-enmienda-m25b-1.md).
 
+**Enmienda M26b — Estrategias publicitarias verificables, aprobada por el usuario el 2026-11-16** ([propuesta](revisiones/propuesta-enmienda-m26b-estrategias.md)): incorpora `M26b.1` y `M26b.2`, los gates `G-STRATEGY-ENGINE` y `G-STRATEGIES`, DEC-26 y CA-82 a CA-94. El motor es determinístico, manual, versionado y sin LLM autoritativo, persistencia ni escrituras externas. M26b.1 queda habilitada por `G-DIAG`; M26b.2 requiere `G-STRATEGY-ENGINE`; `G-ANOMALIES` se exige para cerrar `G-STRATEGIES`, que pasa a ser dependencia adicional de M28.3a. La enmienda no aprueba las specs o planes hijos ni cierra gates. **El texto enmendado es vigente.**
+
+**Segunda enmienda M26b — Unificación, aprobada por el usuario el 2026-11-16** ([enmienda](revisiones/enmienda-m26b-unificacion.md)): sustituye las dos microfases por una única `M26b`, con una spec y un plan, y aprueba una excepción expresa al límite de ocho horas. D-M26b-08 queda histórica y superada. `G-STRATEGY-ENGINE` se conserva como checkpoint interno y `G-STRATEGIES` como único gate final. No se reduce ningún criterio ni se autoriza implementación. **Esta segunda enmienda prevalece sobre las referencias M26b.1/M26b.2 de la primera.**
+
 **Enmienda de Insights ampliados, aprobada por el usuario el 2026-11-06:** el usuario confirmó el alcance de cuatro niveles y ordenó resolver e integrar la enmienda antes de M16c. El contrato vigente es §11 de la spec de la ruta; se coordinan Parte I, II.11, el chat y el acta M03a. La aprobación de alcance no cierra G-SYNC ni aprueba las specs/planes de implementación. Se conserva la evidencia histórica en [la propuesta inicial](../M16c/revisiones/propuesta-ampliacion-insights-1.md).
 
 **Enmienda CA-67 aprobada expresamente por el usuario el 2026-10-19:** incorpora al cierre la gestión de borrado anticipado de los correos de Auth que todavía conserve Resend. Los cinco pasos locales conservan su orden. Este texto es vigente.
@@ -62,7 +66,7 @@ Un usuario (el dueño), una empresa y una cuenta publicitaria conectada. El due�
 - Más de una conexión por proveedor y empresa. Desde la enmienda de conectores se admiten tres proveedores: Meta, Tiendanube y GA4.
 - Workers, colas, reintentos en segundo plano, programación automática. El esquema `worker_api` es un nombre heredado del ROADMAP v2.3 y no implica construir un worker.
 - Reportes publicados (`reliability`, `catalog`). Distribución pública de las apps de Tiendanube y Google. Análisis por persona con eventos crudos de GA4 (BigQuery Export, User-ID).
-- Benchmarks, recomendaciones de presupuesto, explicación causal del rendimiento y evaluación de rentabilidad. Solo se admiten las métricas y tasas del contrato de §11, los cálculos de CA-48 y las comparaciones determinísticas de M25b; el modelo no calcula cifras autoritativas.
+- Benchmarks, recomendaciones de presupuesto, explicación causal del rendimiento y evaluación de rentabilidad. Solo se admiten las métricas y tasas del contrato de §11, los cálculos de CA-48, las comparaciones determinísticas de M25b y la excepción acotada de §16b: M26b produce recomendaciones manuales, determinísticas y versionadas desde evidencia propia, con catálogo cerrado, sin montos ni porcentajes, causalidad, rentabilidad, promesas ni LLM autoritativo.
 - Base vectorial o RAG.
 
 ## 3. Registro de decisiones
@@ -94,6 +98,7 @@ Un usuario (el dueño), una empresa y una cuenta publicitaria conectada. El due�
 | DEC-23 | Desgloses diarios de edad y género, país y región, por cuenta y campaña, según §11. Entran al catálogo del chat con DEC-24. Aprobada por el usuario el 2026-11-08 (`H-E1-202`) | Cerrada |
 | DEC-24 | Chat con opción A ampliada: la IA elige de un catálogo cerrado, el servidor calcula y la app dibuja. Seis cálculos, desgloses, 19 bloques y casos dudosos (CA-48, CA-71 a CA-73), en una sola microfase `M25a`. Si la cuenta sigue sin actividad, `G-CHAT` se cierra con datos sintéticos y un recorrido real con 0 filas, como riesgo temporal. Aprobada por el usuario el 2026-11-08 (`H-E1-190`) | Cerrada |
 | DEC-25 | Detector de anomalías determinístico y reutilizable en M25b, paralelo a M25a después de `G-SYNC`; datos reales bajo RLS o demostración sintética inequívocamente separada; sin IA ni escrituras en Meta. Aprobada por el usuario el 2026-11-11 | Cerrada |
+| DEC-26 | Estrategias publicitarias verificables en una única M26b, con excepción expresa al límite de ocho horas: motor determinístico, manual, versionado, sin LLM autoritativo, persistencia ni escrituras externas; M26b después de `G-DIAG`; `G-STRATEGY-ENGINE` como checkpoint interno; `G-ANOMALIES` requerido para cerrar el gate final `G-STRATEGIES`; `G-STRATEGIES` requerido por M28.3a. Primera enmienda y unificación aprobadas por el usuario el 2026-11-16 | Cerrada; enmendada por D-EM26b-U-01 a U-03 |
 
 ## 4. Prerrequisitos de Meta — pendientes de verificar
 
@@ -634,6 +639,8 @@ Ningún secreto se pega en el chat ni se guarda en el repositorio.
 | Sincronización | `test:policies`, `test:app` de revocación y desconexión durante una sincronización, más pruebas unitarias con Meta simulada: paginación completa, fallo en una página intermedia, resincronización sin duplicados y con valores actualizados, ejecución desplazada (A vence, B publica, A es rechazada), snapshot nuevo sin fila donde el anterior tenía valor, captura parcial vista al día siguiente sin resincronizar, precisión SQL → API → TypeScript |
 | Chat | Pruebas obligatorias de CA-50b (sin efecto desde la enmienda H-E1-228 de «Afirmaciones numéricas»), aislamiento (CA-54), límites (CA-70), redacción (CA-66), escritura en vuelo (CA-38c), VR-02 y transcripciones reproducibles con fixtures sintéticos |
 | Anomalías | Pruebas unitarias de CA-74 a CA-78, componentes de CA-79/80, aplicación focalizada de CA-81 contra el desechable y recorrido real/demo |
+| M26b — checkpoint motor/adaptador | Contratos, determinismo, bordes, precisión, RLS, tenant A/B, cero escrituras, reutilización de lecturas y rendimiento de CA-82 a CA-91; `db:check:test`, `test:policies`, `test:app` focalizado y `verify` |
+| M26b — interfaz y gate final | Estados, accesibilidad, sesión, objetivo ausente, advertencia del CPA de compras y CA-92 a CA-94; repetición de suites, componentes, regresiones remotas/RLS/seguridad, recorrido autenticado real y demo sintética |
 
 Criterios transversales:
 
@@ -679,6 +686,24 @@ Contrato nuevo y acotado, separado del chat. La spec de la microfase es [`M26a/s
 - **Reversibilidad.** Al publicar un informe nuevo se elimina el anterior en la misma transacción, y su texto exacto no se puede restaurar. Ninguna otra escritura pierde reversibilidad.
 - **Retención.** Un único informe derivado se conserva sin clave foránea que lo borre con la conexión: se oculta al desconectar y se elimina al reemplazarlo o al borrar la empresa. `purge_connection` y CA-67 siguen borrando los datos de la conexión. Salvedad: el informe con sección de Tiendanube se borra con esa conexión (enmienda D-M16e-15).
 - **Tercero con datos.** Anthropic es el destino exclusivo del diagnóstico, con su retención estándar y una búsqueda web separada sin datos privados. DeepInfra sigue siendo el destino del chat. Hay que reaprobar el acta `M03a` y avisar al dueño antes de enviar datos reales.
+
+## 16b. Estrategias publicitarias verificables (M26b; DEC-26)
+
+Contrato determinístico y acotado, separado del chat y sin persistencia propia. La spec única [`M26b/spec.md`](../M26b/spec.md) detalla la implementación una vez auditada y aprobada; hasta entonces rigen estos criterios de ruta:
+
+- **CA-82 — Contrato y determinismo.** La salida se valida con un contrato versionado e incluye estado, versión, recomendación, prioridad, acción, evidencia y plan de comprobación. Entradas idénticas producen salida idéntica. Los cálculos usan aritmética decimal explícita y no dependen de un LLM.
+- **CA-83 — R1 y M25b.** R1 reutiliza anomalías válidas de M25b y su contrato 7+7; no duplica el detector. Solo se genera con evidencia suficiente y conserva procedencia hacia las observaciones utilizadas.
+- **CA-84 — R2/R3 y muestra.** R2 usa aumento de gasto mayor o igual a 30 % sin mejora de resultados, o empeoramiento del costo por resultado mayor o igual a 25 %. R3 usa mejora del costo por resultado mayor o igual a 25 %, y una anomalía crítica de la misma entidad bloquea R3. Exigen 28 días actuales, cero días abiertos, cuenta 28+28 completa, al menos 1.000 impresiones, 100 clics y 30 resultados actuales, al menos 30 resultados anteriores y gasto/costo anterior calculable. No se exigen impresiones o clics anteriores por campaña; la limitación se muestra y prueba. Cada cuenta o campaña se compara únicamente contra su propio historial: no se usan rankings, benchmarks ni comparaciones entre objetivos diferentes. Datos insuficientes o inconsistentes no producen R2/R3.
+- **CA-85 — Acciones manuales.** El catálogo cerrado es `review`, `consider_reduce` y `consider_controlled_test`. Son sugerencias manuales, nunca órdenes ni automatizaciones. `consider_reduce` solo aparece ante R2 o CPA crítico compatible, con evidencia suficiente, prudencia e incertidumbre. No se recomiendan importes o porcentajes ni se prometen resultados.
+- **CA-86 — Objetivo y CPA de compras.** Sin objetivo configurado, R1 puede mostrarse con evidencia, R2/R3 quedan no evaluadas y la UI enlaza a Diagnóstico sin duplicar configuración. Con objetivo distinto de compras, la anomalía se rotula «CPA de compras atribuidas por Meta», aclara que no representa el costo del objetivo, solo permite `review` y no alimenta R2/R3.
+- **CA-87 — Prioridad y límite.** Se conservan todas las recomendaciones `high` y hasta diez adicionales `medium` o `low`. El orden y la deduplicación son determinísticos. `truncated` informa cuántas recomendaciones no prioritarias quedaron fuera; nunca oculta una `high`.
+- **CA-88 — Explicación y comprobación.** Cada recomendación explica qué datos la justifican, sus limitaciones y cómo comprobar la acción. M26b no guarda aceptación, descarte, ejecución ni resultados posteriores.
+- **CA-89 — Estados honestos.** La salida distingue datos suficientes, insuficientes, no evaluables, inconsistentes y errores. No inventa métricas, objetivos o recomendaciones. La UI conserva esa semántica y no recalcula reglas.
+- **CA-90 — Seguridad y fronteras.** El tenant se resuelve en servidor; datos reales se leen con el aislamiento y RLS vigentes; no se acepta `company_id` del cliente; no hay SQL, RPC, migraciones, escritura externa, integración con chat ni consulta directa nueva a Meta. La demo es exclusiva y no atraviesa loaders reales.
+- **CA-91 — Verificación del checkpoint de M26b.** Pruebas unitarias y remotas cubren bordes inclusivos, precisión, faltantes, orden, deduplicación, truncamiento, tenant A/B, RLS, reutilización de lecturas, cero escrituras y rendimiento del fixture máximo conforme a la spec aprobada. `G-STRATEGY-ENGINE` es un checkpoint interno y no cierra la microfase.
+- **CA-92 — Interfaz.** La pantalla protegida muestra metodología, versión, evidencia, prioridad, acción manual, incertidumbre, plan de validación, estados de datos y navegación. Sin objetivo, muestra el aviso y enlace a Diagnóstico. No expone UUID, secretos ni identificadores sensibles.
+- **CA-93 — Demo sintética.** M26b incluye una demo ficticia, exclusiva, inequívocamente rotulada y separada de datos reales. El gate exige recorrer la demo y la cuenta autenticada real. La demo no demuestra valor comercial ni sustituye pruebas automatizadas, remotas, RLS o de seguridad.
+- **CA-94 — Gate.** `G-STRATEGIES`, único gate final de M26b, requiere el checkpoint `G-STRATEGY-ENGINE`, `G-ANOMALIES`, todas las pruebas, recorrido real y demo. Puede cerrarse técnicamente con una cuenta real sin actividad suficiente solo si se registra expresamente «sin validación comercial». El gate se agrega a M28.3a sin eliminar dependencias existentes.
 
 ## 17. Conectores Tiendanube y GA4 (M16e, M16f)
 
