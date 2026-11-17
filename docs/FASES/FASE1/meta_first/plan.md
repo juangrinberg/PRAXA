@@ -2,6 +2,8 @@
 
 **Versión:** 1.0 — 2026-09-24
 **Estado:** `APROBADO PARA EJECUCIÓN`. `M04a` está cerrada y `G-DOCS` fue aprobado por el usuario el 2026-09-24. El estado de cada microfase y la siguiente habilitada están en `docs/PROJECT_STATE.md`.
+**Enmienda M25c — Stock y reposición (feature #8), aprobada por el usuario el 2026-11-17.** Incorpora un corte independiente, determinístico y de solo lectura sobre Tiendanube, dependiente de `G-TIENDA`, con gate propio `G-STOCK` y límite de hasta 8 horas de implementación, sin excepción. Autoriza únicamente recomendaciones de reposición justificadas por datos y parámetros explícitos; no incorpora liquidación de stock inmovilizado (#10), compras ni escrituras externas. Cambian I.1–I.4, II.13d y III.1–III.3 y III.8, coordinados con §18 y DEC-26 de la spec de la ruta. La siguiente secuencial `M16f` y los gates existentes de `M28.3a` se conservan; `G-STOCK` no agrega una dependencia a la demo. Se autoriza la preparación documental de M25c; la implementación concurrente requiere antes coordinar los archivos compartidos. **No aprueba la spec ni el plan de M25c, no inicia `/expand-microfase M25c` ni autoriza código, migraciones o datos reales nuevos.** Evidencia y límites: [sesión de enmienda](sesiones/enmienda-m25c-2026-11-17.md). **El texto enmendado es vigente.**
+
 **Enmienda M25b, aprobada por el usuario el 2026-11-11** ([propuesta](revisiones/propuesta-enmienda-m25b-1.md)): después de `G-SYNC` se ejecuta en paralelo con M25a un detector determinístico y reutilizable de anomalías de Meta Ads. Agrega DEC-25, CA-74 a CA-81, `G-ANOMALIES`, la ficha M25b, II.13c y sus verificaciones. No modifica diagnóstico, chat ni reportes y no consulta ni escribe Meta. **El texto enmendado es vigente.**
 **Enmienda de corrida única de M16c, aprobada por el usuario el 2026-11-07:** `M16c` se ejecuta como una microfase única en tres etapas, con una spec, un plan, una corrida de `/microfase` y un solo gate (`G-SYNC`); `G-SYNC-DB` y `G-SYNC-EXTRACT` pasan a ser controles de etapa. Excepción puntual al límite de 8 horas de `AGENTS.md` (D-M16c-05). Cambian la ficha de `M16c`, sus etapas, II.11, III.2 y III.3. Evidencia: [sesión](sesiones/enmienda-corrida-unica-2026-11-07.md) y [propuesta](../M16c/revisiones/propuesta-enmienda-corrida-unica-1.md). **El texto enmendado es vigente.**
 **Enmienda G-SYNC con cuenta sin actividad, aprobada por el usuario el 2026-11-07:** Q-04 se fija según la spec (duración por debajo de Vercel, ventana de CA-47b y cotas técnicas) y `G-SYNC` puede cerrarse con la sincronización real de los cuatro niveles con 0 filas; la validación de campos queda en `H-E1-189` como riesgo aceptado temporal (D-M16c-02). Cambian la Base, la ficha de `M16c`, II.11 y III.4 de este plan, y la línea 23 y la fila Q-04 de la spec de la ruta. Evidencia: [sesión](sesiones/enmienda-gsync-2026-11-07.md). **El texto enmendado es vigente.**
@@ -77,6 +79,7 @@ La enmienda **no aprueba las specs ni los planes de `M16e` y `M16f`**, ni el act
 | — | `M16d` — App Review y Business Verification | Nueva, **fuera de la ruta**: hace falta recién para escalar |
 | `M25.1` a `M25.5` — Chat | `M25a` | Chat sobre el catálogo de §11 con entidades, atribución, cifras verificadas, cálculos y bloques visuales |
 | — | `M25b` — Detector de anomalías | Nueva; paralela a M25a después de `G-SYNC` |
+| — | `M25c` — Stock y reposición (feature #8) | Nueva; depende de `G-TIENDA`; preparación documental autorizada, implementación pendiente del pipeline y de coordinación |
 | — | `M26a` — Diagnóstico de Meta Ads | Nueva (enmienda del 2026-11-11) |
 | `M16` (Tiendanube) | `M16e` — Conector Tiendanube y cohortes de compradores | Nueva (enmienda del 2026-11-14) |
 | `M16` (GA4) | `M16f` — Conector GA4 y comparación entre fuentes | Nueva (enmienda del 2026-11-14) |
@@ -93,7 +96,7 @@ La enmienda **no aprueba las specs ni los planes de `M16e` y `M16f`**, ni el act
 - workers, colas o programación automática;
 - distribución pública de las apps de Tiendanube y Google (homologación, verificación de marca) y análisis por persona con eventos crudos de GA4 (BigQuery Export, User-ID);
 - reportes publicados;
-- recomendaciones y explicaciones causales; las comparaciones determinísticas versionadas de M25b son la única ampliación de métricas derivadas;
+- recomendaciones y explicaciones causales fuera de los contratos expresos de la ruta; se admiten las comparaciones determinísticas versionadas de M25b y, exclusivamente en M25c, métricas de inventario y recomendaciones determinísticas de reposición según §18 de la spec. No se amplía el chat ni el diagnóstico;
 - base vectorial.
 
 ## I.2 Mapa de la ruta
@@ -115,12 +118,14 @@ flowchart LR
   L --> P["M26a Diagnóstico de Meta Ads"]
   P --> Q["M16e Tiendanube"]
   Q --> R["M16f GA4 y comparación"]
+  Q --> S["M25c Stock y reposición (G-STOCK)"]
   R --> N["M28.3a Demo y cierre"]
   M --> N
   O["M16d App Review — fuera de la ruta"] -.-> N
 ```
 
 - `M03a` se puede redactar en paralelo desde el principio, pero su aprobación es el gate que habilita el primer dato real: el alta del dueño y su autorización en `M16.2`.
+- `M25c` depende de `G-TIENDA` y termina en su propio gate, sin modificar el orden de `M16f` ni los requisitos de `M28.3a`. La rama del mapa expresa dependencia funcional, no permiso para implementar concurrentemente sobre archivos compartidos.
 - La primera autorización real ocurre en `M16.2`, cuando ya existen la selección de cuenta, el vencimiento de pendientes y la desconexión. Así, una credencial real nunca queda pendiente entre sesiones de implementación (T10).
 - `M28.2a` va antes de `M16.1` porque la URI de redirección de Meta necesita el dominio fijo del piloto.
 
@@ -141,7 +146,8 @@ flowchart LR
 | `G-CHAT` | `M25a` | `M26a` |
 | `G-ANOMALIES` | `M25b` | `M28.3a`, junto con `G-CHAT`, `G-DIAG`, `G-TIENDA` y `G-GA4-FUSION` |
 | `G-DIAG` | `M26a` | `M16e` |
-| `G-TIENDA` | `M16e` | `M16f` |
+| `G-TIENDA` | `M16e` | `M16f` y preparación de `M25c`; implementación de M25c solo tras spec/plan aprobados y coordinación |
+| `G-STOCK` | `M25c` | Cierre independiente de Stock y reposición; no habilita sucesoras ni altera los gates de la demo |
 | `G-GA4-FUSION` | `M16f` | `M28.3a`, junto con `G-CHAT` y `G-ANOMALIES` |
 | `G-DEMO` | `M28.3a`, al completar la demostración | Cierre de la ruta. El piloto sigue hasta su fin, y entonces se ejecuta CA-67 (DEC-20) |
 
@@ -401,6 +407,21 @@ Las tres etapas se ejecutan en orden, en una sola corrida de `/microfase M16c` e
 | **Condición para avanzar** | `G-ANOMALIES`. |
 | **Dependencias / habilita** | `G-SYNC` / `M28.3a` junto con `G-CHAT` |
 | **Intervención requerida del usuario** | Aprobar documentos; hacer commit, push, PR, integración, despliegue y aprobar el gate. |
+
+### M25c — Stock y reposición (feature #8)
+
+| Campo | Contenido |
+|---|---|
+| **ID** | `M25c` — microfase única, hasta 8 horas de implementación, una spec, un plan y un gate; sin excepción al límite de `AGENTS.md`. |
+| **Objetivo** | Ayudar al dueño a identificar agotados y riesgo de quiebre y a priorizar reposición por variante, con métricas y evidencia de Tiendanube. |
+| **Implementación requerida** | Pantalla independiente con stock observado y fecha, unidades y velocidad de venta, días estimados de cobertura cuando sean calculables, agotados, prioridad determinística y cantidades sugeridas solo con datos suficientes y parámetros explícitos. Motor determinístico verificable, sin LLM; incorporación mínima de stock al conector y lecturas propias que incluyan variantes sin ventas. Alcance y abstenciones: §18 de la spec de la ruta; límites de archivos: II.13d. |
+| **Procedimiento del asistente** | Seguir `docs/PIPELINE.md`: expansión solo a pedido, preguntas materiales en grill, auditoría y aprobación de spec antes del plan. Verificar que el corte completo cabe en 8 horas; si no cabe, detener y proponer ajuste de ruta, sin recortar alcance ni subdividir por cuenta propia. En la futura implementación aplicar TDD (rojo, verde y refactor), con fixtures sintéticos y proyecto desechable. Preservar comportamiento de M16e y coordinar archivos compartidos antes de implementar. |
+| **Evidencia de cierre** | `sesiones/M25c.md`: comandos y resultados reproducibles, rojo/verde, comprobación de formas de stock, cobertura y frescura, pruebas de aislamiento y purga, regresiones de M16e y recorrido sintético de la pantalla. No incluir datos de cuentas ni cifras reales. |
+| **Criterio de aceptación** | CA-82 a CA-89 y CB-01 a CB-06. Todas las recomendaciones reproducibles desde evidencia y parámetros; ausencia, antigüedad o insuficiencia explicadas sin inventar cifras. |
+| **Pruebas** | Unitarias del motor, componentes, pgTAP y aplicación contra el desechable; regresión del conector. Casos de stock desconocido/no gestionado, cero ventas, catálogo sin ventas, sincronización parcial o fallida, múltiples ubicaciones, cancelaciones/reembolsos, cross-tenant, desconexión y privacidad. |
+| **Condición para avanzar** | `G-STOCK`, aprobado expresamente por el usuario después de las verificaciones y revisiones del pipeline. No agrega sucesoras ni requisitos a `G-DEMO`. |
+| **Dependencias / habilita** | `G-TIENDA` aprobado, con sus excepciones documentadas / cierre propio. No requiere `G-GA4-FUSION` ni `G-ANOMALIES`. La dependencia satisfecha no autoriza implementación sin spec y plan aprobados. |
+| **Intervención requerida del usuario** | Resolver ventana, frescura, umbrales, múltiples depósitos y parámetros de cantidad en la futura spec; aprobar spec y plan; coordinar implementación si coincide con archivos compartidos de otras microfases; aprobar y comunicar la ampliación del acta antes de nuevos datos reales; ejecutar migraciones y publicación cuando corresponda y aprobar `G-STOCK`. No se piden secretos en el chat. |
 
 ### M26a — Diagnóstico de Meta Ads
 
@@ -880,6 +901,28 @@ prohibido detiene la microfase.
 
 ---
 
+## II.13d `M25c` — Stock y reposición: límites autorizados
+
+Enmienda del 2026-11-17. Esta sección delimita el corte y los archivos que podrá concretar la futura spec; **no es el plan de implementación de M25c**. No existen ni se crean aquí `M25c/spec.md` ni `M25c/plan.md`. DEC-26 y §18 de la spec de la ruta son el contrato de alcance; las decisiones materiales permanecen pendientes.
+
+**Archivos previstos autorizados, solo cuando el pipeline habilite su etapa:**
+
+- módulo nuevo `src/modules/stock/`, para contrato, motor puro, adaptador de lectura y evidencia; página nueva `src/app/(app)/app/stock/page.tsx` y componentes nuevos `src/components/app/stock*`; `src/components/app/shell.tsx`, solo para navegación aditiva;
+- `src/modules/integrations/tiendanube/{projection,sync,repository,analysis,client,config,limits}.ts` y `src/modules/integrations/db/worker-api.ts`, solo en lo necesario para lectura, validación, sincronización y publicación interna de stock y su frescura, manteniendo contratos y comportamiento previos. No se autoriza cambiar OAuth, scopes ni el ciclo de vida general;
+- migraciones **nuevas** en `supabase/migrations/`, con numeración determinada al implementar, para stock, lecturas bajo RLS y su purga; nunca editar las existentes. pgTAP nuevo específico en `supabase/tests/`; ajustes acotados a `09_integration_privileges.test.sql`, `10_demo_closure.test.sql` y `18_tiendanube.test.sql` únicamente para privilegios, purga y regresiones del nuevo dato;
+- suites nuevas específicas de stock en `tests/{unit,component,app}/`; regresiones en `tests/unit/tiendanube-{sync,analysis}.test.ts` y `tests/app/tiendanube-{sync,data-api}.test.ts`, exclusivamente por la ampliación de inventario;
+- documentación: artefactos M25c del pipeline, `meta_first/{plan,spec}.md`, sesión `meta_first/sesiones/M25c.md`, `docs/HALLAZGOS.md` y `docs/PROJECT_STATE.md`. `docs/ARCHITECTURE.md` solo para el módulo y flujo de inventario previsto/existente; `docs/SECURITY.md` solo para activos, acceso, retención y purga del nuevo dato; `docs/FASES/FASE1/M03a/acta-meta.md` y su sesión solo para la ampliación de datos y finalidad, con aprobación y comunicación previas al primer dato real nuevo.
+
+Los nombres de archivos nuevos son previstos, no existentes. La futura spec precisa la lista dentro de estas fronteras; si requiere algo fuera, se vuelve a una enmienda. Chat, diagnóstico, reporting, anomalías, Meta y GA4 quedan fuera; no se autorizan paquetes, servicios, cron ni workers nuevos.
+
+**Coordinación.** La preparación documental puede convivir con M16f y M25b. Antes de implementar se comprueban Git, ramas y modificaciones concurrentes y se acuerda con el usuario el orden de integración de los archivos compartidos del conector, el cliente de base, la navegación y los pgTAP. Esta enmienda no autoriza implementación concurrente sobre ellos ni da por cerrado un gate ajeno.
+
+**Riesgos y decisiones que la expansión debe explicitar.** La proyección y el esquema de M16e no guardan stock; la RPC de ranking no incluye el catálogo sin ventas y limita la salida a 50 filas. Las unidades elegibles existentes no prueban demanda perdida, devoluciones físicas ni movimientos de inventario. Validar `stock_management`, `stock` e `inventory_levels` y el alcance de múltiples ubicaciones con documentación oficial y datos sintéticos/demostración, sin asumir que llegan por el listado actual. No existe una política aprobada de ventana, frescura, umbral o cantidad: se resuelve en la futura spec, sin inventar plazos de proveedores, reservas o compras en tránsito.
+
+**Verificación y cierre.** Rigen III.3, CA-82 a CA-89 y el pipeline completo; aislamiento y purga requieren pgTAP y `test:app`, no basta `verify`. No se hereda la excepción de pruebas en `app` de M16e: para M25c las pruebas usan datos sintéticos y proyecto desechable. El gate es `G-STOCK`; las limitaciones comerciales de ventas observadas deben quedar visibles. Si el corte excede 8 horas o no puede comprobarse de principio a fin, se detiene antes del plan para una decisión del usuario.
+
+---
+
 ## II.14 `M26a` — Diagnóstico de Meta Ads
 
 Spec: [`M26a/spec.md`](../M26a/spec.md) (borrador hasta su auditoría y aprobación). El plan de la microfase se redacta después de aprobar la spec; hasta entonces esta sección fija solo las etapas, los archivos autorizados y el cierre.
@@ -1002,6 +1045,7 @@ El detalle y los criterios de aceptación están en la spec v1.0.
 | DEC-21 | Umbrales de VR-02 adoptados como criterios iniciales |
 | DEC-22 | Catálogo de Insights ampliados, granularidad y agregación: §11 de la spec; cortes y archivos: ficha M16c e II.11 |
 | DEC-25 | Detector de anomalías determinístico y reutilizable, paralelo a M25a; CA-74 a CA-81 y II.13c |
+| DEC-26 | Stock y reposición determinísticos sobre Tiendanube, solo lectura, evidencia y abstenciones; §18, CA-82 a CA-89 e II.13d. Sin excepción al límite de 8 horas |
 | D2 | Sin worker: la sincronización es manual y la limitación se declara en la interfaz |
 | K01 | `M05.1.1` entra en la ruta como primer contrato |
 
@@ -1022,6 +1066,7 @@ El detalle y los criterios de aceptación están en la spec v1.0.
 | `M25a.2` | Crear la cuenta de DeepInfra y cargar `DEEPINFRA_API_KEY` |
 | `M25a.3` | Aprobar de nuevo el acta y comunicar el cambio al dueño; `db:push` de `0018` y `0019` en orden en `app`, publicar y aprobar `G-CHAT` |
 | `M25b` | Aprobar documentos; hacer commit/push/PR, coordinar la integración con diagnóstico, desplegar y aprobar `G-ANOMALIES` |
+| `M25c` | Resolver decisiones materiales de inventario en la spec, aprobar spec y plan y coordinar archivos compartidos antes de implementar; aprobar/comunicar acta ampliada antes de nuevos datos reales; ejecutar migraciones y publicación cuando corresponda y aprobar `G-STOCK` |
 | `M26a` | Aprobar la spec y el plan; crear la cuenta de Anthropic y cargar la clave sin compartirla por chat; aprobar de nuevo el acta y comunicar al dueño la transferencia a Anthropic antes de enviar datos reales; aplicar la migración en el desechable y en `app`; revisar los PDF sintéticos y aprobar `G-DIAG` |
 | `M16e` | Aprobar spec, plan y acta ampliada, y comunicarla al dueño; crear la app en el Portal de Socios de Tiendanube, con scopes y URLs de instalación y privacidad; cargar credenciales fuera del chat; obtener la autorización del dueño; aplicar migraciones, publicar y aprobar `G-TIENDA` |
 | `M16f` | Configurar Google Cloud, la pantalla de consentimiento y las APIs Data y Admin; registrar URI y testers; cargar credenciales fuera del chat; garantizar acceso a la propiedad; revisar medición y consentimiento con el dueño; aprobar documentos, migrar, publicar y aprobar `G-GA4-FUSION` |
@@ -1052,6 +1097,7 @@ Ninguna clave se pega en el chat.
 | `M25a.2` | Suite adversaria; VR-02 |
 | `M25a.3` | `test:policies`, `test:app`; evaluación ampliada; recorrido manual |
 | `M25b` | `db:check:test`, `test:app` focalizado; unit/component focalizadas y recorrido real/demo |
+| `M25c` | `db:check:test`, `test:policies` y `test:app` contra el desechable; unit/component focalizadas con TDD, regresión de M16e, formas de stock y recorrido sintético. Sin pruebas en producción |
 | `M26a` | `test:policies`, `test:app`, `test:eval` del diagnóstico, inspección manual de PDF y recorrido de la pantalla |
 | `M16e` | `db:check:test`, `test:policies`, `test:app` en cada control de etapa; caso real con pedidos y caso de privacidad |
 | `M16f` | `db:check:test`, `test:policies`, `test:app`; `checkCompatibility` y preflight de instrumentación; lectura y comparación reales |
@@ -1146,6 +1192,7 @@ IDs sugeridos. Si chocan con los existentes, se sigue la numeración vigente.
 | `M16c` | Gasto e impresiones por día, con los huecos y los días abiertos marcados |
 | `M25a` | El chat completo, con cálculos y bloques, al publicar con `G-CHAT` |
 | `M25b` | Alertas de Meta con comparación, severidad y evidencia; demo sintético rotulado si faltan datos reales |
+| `M25c` | Pantalla independiente de inventario por variante, prioridades y evidencia; cantidades solo cuando justificadas, abstenciones visibles, al aprobar `G-STOCK` |
 | `M26a` | El dueño genera, lee y descarga un diagnóstico de 28 días de su cuenta de Meta, al aprobar `G-DIAG` |
 | `M16e` | La tienda conectada, con ventas pagadas, cohortes de compradores y productos vendidos, con cobertura |
 | `M16f` | Visitas, embudo y cohortes de visitantes de GA4, comparados con la tienda y con Meta solo donde hay clave verificada |

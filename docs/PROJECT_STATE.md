@@ -40,6 +40,16 @@ vigente: Parte I de [FASES/FASE1/meta_first/plan.md](FASES/FASE1/meta_first/plan
 
 Evidencia en [sesiones/M25a.md](FASES/FASE1/meta_first/sesiones/M25a.md) y [sesiones/M26a.md](FASES/FASE1/meta_first/sesiones/M26a.md).
 
+## M25c — Enmienda aprobada; expansión no iniciada
+
+**M25c — Stock y reposición:** incorporada a la ruta por aprobación expresa del usuario el
+2026-11-17. Dependencia `G-TIENDA` satisfecha con las excepciones de su cierre. Preparación
+documental habilitada a pedido; spec y plan no creados ni aprobados, implementación no iniciada
+y `G-STOCK` pendiente. La ejecución concurrente requiere coordinación previa de archivos
+compartidos. No reemplaza a M16f como siguiente secuencial ni agrega un gate a M28.3a.
+
+Evidencia: [sesión de enmienda](FASES/FASE1/meta_first/sesiones/enmienda-m25c-2026-11-17.md).
+
 ## Trabajo paralelo autorizado
 
 **M25b — IMPLEMENTACIÓN TERMINADA; GATE PENDIENTE** en `feat/m25b-meta-anomalies`, habilitada

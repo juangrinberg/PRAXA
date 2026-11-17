@@ -2,6 +2,8 @@
 
 ## Estado
 
+**Enmienda M25c — Stock y reposición (feature #8), aprobada por el usuario el 2026-11-17.** Agrega DEC-26 y §18 (CA-82 a CA-89), coordinados con la ficha y II.13d del plan de la ruta. Autoriza un motor y una pantalla independientes, determinísticos y de solo lectura sobre Tiendanube, después de `G-TIENDA`, con límite de hasta 8 horas y gate `G-STOCK`. No aprueba una spec ni un plan de M25c, no autoriza implementación ni inicia su expansión. No altera los contratos del chat, diagnóstico, M25b, GA4 ni los gates de la demo. [Evidencia de aprobación y límites](sesiones/enmienda-m25c-2026-11-17.md).
+
 **Enmienda de conectores Tiendanube y GA4, aprobada por el usuario el 2026-11-14** ([propuesta](revisiones/propuesta-conectores-tiendanube-ga4-2026-11-12.md), [sesión](sesiones/enmienda-conectores-2026-11-14.md)):
 
 - agrega `M16e` (Tiendanube) y `M16f` (GA4 y comparación entre fuentes) después de `G-DIAG`;
@@ -53,6 +55,8 @@ Un usuario (el dueño), una empresa y una cuenta publicitaria conectada. El due�
 
 **Enmienda de conectores (2026-11-14).** La empresa suma una tienda de Tiendanube (`M16e`) y una propiedad de GA4 (`M16f`), ambas en modo lectura. La demo `M28.3a` las incluye. El criterio de salida de Meta no cambia; los criterios de las nuevas fuentes son los de §17 y las specs de esas microfases.
 
+**Enmienda Stock y reposición (2026-11-17).** Se incorpora M25c como corte independiente sobre Tiendanube con el contrato acotado de §18. No modifica el criterio de salida de Meta ni agrega condiciones a la demo existente.
+
 **Criterio de salida (DEC-01).** El dueño real de la cuenta piloto, con rol de tester en la app de Meta, completa con su propio login el recorrido registro en PRAXA → conexión → sincronización → pregunta al chat, y queda evidencia redactada. Un acceso delegado a otra persona no cuenta.
 
 ## 2. Qué NO se construye
@@ -62,7 +66,7 @@ Un usuario (el dueño), una empresa y una cuenta publicitaria conectada. El due�
 - Más de una conexión por proveedor y empresa. Desde la enmienda de conectores se admiten tres proveedores: Meta, Tiendanube y GA4.
 - Workers, colas, reintentos en segundo plano, programación automática. El esquema `worker_api` es un nombre heredado del ROADMAP v2.3 y no implica construir un worker.
 - Reportes publicados (`reliability`, `catalog`). Distribución pública de las apps de Tiendanube y Google. Análisis por persona con eventos crudos de GA4 (BigQuery Export, User-ID).
-- Benchmarks, recomendaciones de presupuesto, explicación causal del rendimiento y evaluación de rentabilidad. Solo se admiten las métricas y tasas del contrato de §11, los cálculos de CA-48 y las comparaciones determinísticas de M25b; el modelo no calcula cifras autoritativas.
+- Benchmarks, recomendaciones de presupuesto, explicación causal del rendimiento y evaluación de rentabilidad. Solo se admiten las métricas y tasas del contrato de §11, los cálculos de CA-48, las comparaciones determinísticas de M25b y, exclusivamente en M25c, las métricas y recomendaciones determinísticas de reposición de §18; el modelo no calcula cifras autoritativas.
 - Base vectorial o RAG.
 
 ## 3. Registro de decisiones
@@ -94,6 +98,7 @@ Un usuario (el dueño), una empresa y una cuenta publicitaria conectada. El due�
 | DEC-23 | Desgloses diarios de edad y género, país y región, por cuenta y campaña, según §11. Entran al catálogo del chat con DEC-24. Aprobada por el usuario el 2026-11-08 (`H-E1-202`) | Cerrada |
 | DEC-24 | Chat con opción A ampliada: la IA elige de un catálogo cerrado, el servidor calcula y la app dibuja. Seis cálculos, desgloses, 19 bloques y casos dudosos (CA-48, CA-71 a CA-73), en una sola microfase `M25a`. Si la cuenta sigue sin actividad, `G-CHAT` se cierra con datos sintéticos y un recorrido real con 0 filas, como riesgo temporal. Aprobada por el usuario el 2026-11-08 (`H-E1-190`) | Cerrada |
 | DEC-25 | Detector de anomalías determinístico y reutilizable en M25b, paralelo a M25a después de `G-SYNC`; datos reales bajo RLS o demostración sintética inequívocamente separada; sin IA ni escrituras en Meta. Aprobada por el usuario el 2026-11-11 | Cerrada |
+| DEC-26 | Stock y reposición en M25c: motor determinístico sin LLM, pantalla independiente por variante, lecturas de Tiendanube y recomendaciones solo con datos y parámetros explícitos, §18. Depende de `G-TIENDA`, gate propio `G-STOCK`, hasta 8 horas sin excepción; sin alterar demo ni habilitar implementación concurrente sobre archivos compartidos. Aprobada por el usuario el 2026-11-17 | Cerrada para este alcance; parámetros materiales pendientes en la futura spec |
 
 ## 4. Prerrequisitos de Meta — pendientes de verificar
 
@@ -710,6 +715,23 @@ Enmienda del 2026-11-14. Los contratos detallados son los de las specs [`M16e/sp
     - **CA-70:** el tope de 93 días no aplica a la herramienta `tn_cohortes`, que puede usar todo el histórico con un máximo de 24 cohortes y 12 meses.
     - **§16, punto 6, y excepción «Retención»:** el informe con sección de Tiendanube se borra con esa conexión (enmienda D-M16e-15 de §16).
     - **DEC-11, DEC-19, CA-50, CA-50b, CA-50c y CA-66:** rige para todo el chat la enmienda H-E1-228 de §12 (D-M16e-21).
+
+## 18. Stock y reposición (M25c, DEC-26)
+
+Enmienda de alcance del 2026-11-17. Este es el contrato de la ruta que deberá refinar la futura y única spec `M25c/spec.md` mediante `/expand-microfase M25c`, solo cuando el usuario lo invoque. No es esa spec ni un plan de implementación. Los siguientes criterios están aprobados como alcance; sus parámetros materiales no están decididos.
+
+- **CA-82 — Stock observado por variante.** Una pantalla independiente identifica producto y variante y muestra stock, fuente y fecha de observación. Debe incluir variantes del catálogo sin ventas, sin depender del ranking limitado de M16e. Diferencia stock cero, desconocido, no gestionado y dato inválido. La forma de los campos y el tratamiento de múltiples ubicaciones se verifican antes de usarlos; una ubicación ausente no vale cero. No hay asignación ni reposición por depósito en este corte.
+- **CA-83 — Velocidad de venta reproducible.** El servidor o motor determinístico calcula unidades por día desde las líneas elegibles persistidas, en la zona de la tienda y una ventana explícita de días cerrados con cobertura comprobada. Expone numerador, denominador, fechas y regla de elegibilidad. Se rotula como ventas observadas, sin estimar demanda perdida por agotamientos. Cero ventas cubiertas se distingue de falta de cobertura. Cancelaciones, pagos parciales y reembolsos se explicitan sin reinterpretar silenciosamente los contratos de M16e.
+- **CA-84 — Días de stock y agotados.** Con stock válido, fresco y gestionado y velocidad positiva, estima cobertura bajo la hipótesis explícita de continuidad de la velocidad observada. La fórmula y el redondeo quedan versionados en la spec. Un cero de stock observado permite identificar agotados si cumple la política de frescura. Sin velocidad calculable no inventa días ni muestra infinito como predicción. Un producto con variantes disponibles no se declara íntegramente agotado porque otra variante lo esté.
+- **CA-85 — Prioridad determinística.** Riesgo y prioridad se derivan de reglas explícitas, versionadas y comprobables, con desempate estable y evidencia por variante. Umbrales y antigüedad máxima se aprueban en la spec; no se inventa un plazo de proveedor ni se promete una fecha de quiebre. Una observación parcial, fallida o antigua no se presenta como inventario actual completo.
+- **CA-86 — Cantidades justificadas.** Solo se sugiere una cantidad si datos y parámetros explícitos aprobados permiten justificarla. Debe exponer fórmula, entradas, unidades y limitaciones. Ventana de cobertura objetivo y eventual plazo de reposición requieren decisión del usuario; no se deducen de ventas. No se asumen reservas, pedidos a proveedores, compras en tránsito ni devoluciones físicas. Si falta evidencia o parámetros, muestra el motivo y se abstiene de sugerir cantidad, conservando las métricas válidas.
+- **CA-87 — Evidencia y límites visibles.** Cada resultado enlaza sus datos de origen, período, cobertura, fecha de stock, método versionado y parámetros; distingue hecho observado, cálculo e hipótesis. No hay LLM en cálculos, prioridades ni recomendaciones. No se incorporan liquidación de stock inmovilizado (#10), compras automáticas, pronósticos estacionales, ERP, chat, diagnóstico ni reportes.
+- **CA-88 — Aislamiento, lectura y borrado.** Tenant resuelto en servidor por membresía; ningún `company_id` aportado por el cliente. Lecturas del producto bajo RLS y escrituras internas del conector solo por el rol acotado y funciones autorizadas. Sin escrituras de negocio en Tiendanube ni nuevos permisos OAuth. El nuevo dato respeta desconexión, purga, privacidad y borrado de empresa; los derivados afectados se eliminan o recalculan sin conservar una copia huérfana. La ampliación de finalidad/datos requiere acta aprobada y comunicada antes del primer dato real nuevo. No se amplían las excepciones de reversibilidad existentes.
+- **CA-89 — Comprobación y tamaño del corte.** TDD durante la implementación, con evidencia roja/verde del motor y casos negativos y de borde. Fixtures sintéticos, pgTAP y `test:app` en proyecto desechable prueban aislamiento, privilegios y purga; regresiones verifican que M16e mantiene su comportamiento. Sin pruebas en producción ni herencia de la excepción manual de M16e. Límite de hasta 8 horas, sin excepción: si no cabe el alcance completo, volver al usuario antes del plan. No se cierra `G-STOCK` sin aceptación y revisiones del pipeline.
+
+**Decisiones materiales pendientes para la futura spec.** Ventana de ventas y mínimo de evidencia; frescura máxima y política ante datos parciales; umbrales de riesgo y desempates; alcance del total de múltiples depósitos frente a su significado operativo; parámetros y fórmula de cantidad y dónde se proporcionan. Estas decisiones se formulan con opciones y evidencia en `Preguntas abiertas`; la enmienda no las aprueba por anticipado.
+
+**Límite de conocimiento.** Actualmente M16e conserva unidades de ventas y catálogo sin stock, no historial de disponibilidad ni de movimientos. Su estado de pedido es el vigente. No existe evidencia de demanda insatisfecha, reposiciones, reservas ni unidades físicamente devueltas. Las formas de stock documentadas por Tiendanube son una referencia para verificar, no evidencia de que el conector actual las capture: [Product Variant, API 2025-03](https://tiendanube.github.io/api-documentation/resources/product-variant).
 
 ## Fuentes
 
