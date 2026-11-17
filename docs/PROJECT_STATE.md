@@ -42,6 +42,8 @@ Evidencia en [sesiones/M25a.md](FASES/FASE1/meta_first/sesiones/M25a.md) y [sesi
 
 ## Trabajo paralelo autorizado
 
+**M27a — RFM, cohortes y propuestas de audiencias (#18 + #32): alcance aprobado el 2026-11-17; expansión e implementación NO iniciadas.** G-TIENDA satisface la dependencia de entrada. Puede recorrer el pipeline en paralelo con M16f bajo las condiciones de [II.14d de la ruta](FASES/FASE1/meta_first/plan.md); no depende de G-GA4-FUSION. G-SEGMENTOS-AUDIENCIAS pendiente; la validación monetaria es requisito de cierre. M16f conserva su estado y gates. M26b permanece reservado para #13.
+
 **M25b — IMPLEMENTACIÓN TERMINADA; GATE PENDIENTE** en `feat/m25b-meta-anomalies`, habilitada
 por `G-SYNC` y aprobada por el usuario el 2026-11-11. El detector determinístico y reutilizable,
 la pantalla, el demo separado y sus pruebas están implementados sin tocar diagnóstico, chat ni

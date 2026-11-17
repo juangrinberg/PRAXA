@@ -56,6 +56,8 @@ La enmienda **no aprueba las specs ni los planes de `M16e` y `M16f`**, ni el act
 
 ---
 
+**Enmienda RFM/cohortes/audiencias, aprobada el 2026-11-17:** incorpora M27a (#18 + #32), una microfase y G-SEGMENTOS-AUDIENCIAS; M26b queda reservado para #13. Monetary se valida antes de habilitar montos (spec §18); paralelismo condicionado con M16f (II.14d). No aprueba spec/plan ni cambia gates existentes. [Evidencia y decisiones](revisiones/enmienda-rfm-cohortes-audiencias-2026-11-17.md).
+
 # Parte I — Enmienda 1 al ROADMAP v2.3
 
 ## I.1 Qué cambia y por qué
@@ -85,6 +87,7 @@ La enmienda **no aprueba las specs ni los planes de `M16e` y `M16f`**, ni el act
 | — | `M25b` — Detector de anomalías | Nueva; paralela a M25a después de `G-SYNC` |
 | — | `M26a` — Diagnóstico de Meta Ads | Nueva (enmienda del 2026-11-11) |
 | `M16` (Tiendanube) | `M16e` — Conector Tiendanube y cohortes de compradores | Nueva (enmienda del 2026-11-14) |
+| — | M27a — RFM, cohortes y propuestas de audiencias (#18 + #32) | Nueva; paralela a M16f bajo II.14d |
 | `M16` (GA4) | `M16f` — Conector GA4 y comparación entre fuentes | Nueva (enmienda del 2026-11-14) |
 | `M28.2` — Despliegue | `M28.2a` — Entorno del piloto | Adelanta un despliegue mínimo |
 | `M28.3` — Guion de demostración | `M28.3a` — Demo con el dueño y cierre | Nueva |
@@ -99,7 +102,7 @@ La enmienda **no aprueba las specs ni los planes de `M16e` y `M16f`**, ni el act
 - workers, colas o programación automática;
 - distribución pública de las apps de Tiendanube y Google (homologación, verificación de marca) y análisis por persona con eventos crudos de GA4 (BigQuery Export, User-ID);
 - reportes publicados;
-- recomendaciones y explicaciones causales; las comparaciones determinísticas versionadas de M25b son la única ampliación de métricas derivadas;
+- recomendaciones fuera de los contratos acotados de diagnóstico (§16) y propuestas de audiencias de M27a (§18), ni explicaciones causales; M25b y M27a admiten solo sus métricas derivadas versionadas y verificadas;
 - base vectorial.
 
 ## I.2 Mapa de la ruta
@@ -121,6 +124,7 @@ flowchart LR
   L --> P["M26a Diagnóstico de Meta Ads"]
   P --> Q["M16e Tiendanube"]
   Q --> R["M16f GA4 y comparación"]
+  Q --> S["M27a RFM, cohortes y propuestas"]
   R --> N["M28.3a Demo y cierre"]
   M --> N
   O["M16d App Review — fuera de la ruta"] -.-> N
@@ -147,7 +151,8 @@ flowchart LR
 | `G-CHAT` | `M25a` | `M26a` |
 | `G-ANOMALIES` | `M25b` | `M28.3a`, junto con `G-CHAT`, `G-DIAG`, `G-TIENDA` y `G-GA4-FUSION` |
 | `G-DIAG` | `M26a` | `M16e` |
-| `G-TIENDA` | `M16e` | `M16f` |
+| `G-TIENDA` | `M16e` | M16f y M27a (paralelismo condicionado, II.14d) |
+| G-SEGMENTOS-AUDIENCIAS | M27a | Sin sucesora automática; no cambia G-DEMO |
 | `G-GA4-FUSION` | `M16f` | `M28.3a`, junto con `G-CHAT` y `G-ANOMALIES` |
 | `G-DEMO` | `M28.3a`, al completar la demostración | Cierre de la ruta. El piloto sigue hasta su fin, y entonces se ejecuta CA-67 (DEC-20) |
 
@@ -435,7 +440,7 @@ Las tres etapas se ejecutan en orden, en una sola corrida de `/microfase M16c` e
 | **Criterio de aceptación** | La tienda autorizada se sincroniza por backfill e incremental sin duplicados. Los pedidos pendientes no cuentan como ventas. Las ediciones y los reembolsos corrigen los agregados. Cohortes y ranking se reconstruyen con origen y cobertura. Otra empresa no accede. La desconexión y la solicitud de borrado eliminan lo que corresponde. Errores y token no se filtran. Sin recorrido real con filas, el gate no acredita los campos de producción. |
 | **Pruebas** | Las de §4 de la propuesta, más `npm run verify`, `db:check:test`, `test:policies` y `test:app`. Las definen la spec y el plan de la microfase. |
 | **Condición para avanzar** | `G-TIENDA`, solo con acta ampliada aprobada y comunicada, controles automáticos sin omisiones y validación real con una tienda con datos suficientes. Sin datos o sin permisos, el gate queda bloqueado con diagnóstico, sin simular la aprobación. |
-| **Dependencias / habilita** | `G-DIAG` / `M16f`. |
+| **Dependencias / habilita** | G-DIAG / M16f y M27a bajo II.14d. |
 | **Intervención requerida del usuario** | Aprobar spec, plan y acta ampliada, y comunicarla al dueño. Crear la app en el Portal de Socios, con scopes y URLs de instalación y privacidad. Cargar credenciales solo en entornos seguros. Obtener la autorización del dueño y acordar el tratamiento de los datos de compradores. Aplicar las migraciones, coordinar la prueba real y publicar: al terminar la etapa 4 y al terminar la etapa 5, antes de `G-TIENDA` (D-M16e-25). Nunca pegar secretos, identificadores ni montos en el chat. |
 
 ### M16f — Conector GA4 y comparación entre fuentes
@@ -452,6 +457,21 @@ Las tres etapas se ejecutan en orden, en una sola corrida de `/microfase M16c` e
 | **Condición para avanzar** | `G-GA4-FUSION`, tras acta y controles, con una propiedad real y una lectura real, preflight de eventos y al menos una comparación validada. Lo que no tenga instrumentación se rotula como no disponible. Si es requisito del gate, el gate sigue abierto. |
 | **Dependencias / habilita** | `G-TIENDA` / `M28.3a`, junto con `G-CHAT` y `G-ANOMALIES`. |
 | **Intervención requerida del usuario** | Crear y configurar el proyecto de Google Cloud y la pantalla de consentimiento. Habilitar las APIs Data y Admin. Registrar la URI y el dominio, y agregar testers. Cargar las credenciales fuera del chat. Garantizar acceso de lectura a la propiedad. Revisar con el dueño la medición y el consentimiento. Aprobar acta, spec y plan. Aplicar migraciones y publicar. |
+
+### M27a — RFM, cohortes y propuestas de audiencias (#18 + #32)
+
+| Campo | Contenido |
+|---|---|
+| **ID** | M27a, única microfase, una spec, un plan y un gate G-SEGMENTOS-AUDIENCIAS. M26b está reservado para #13. |
+| **Objetivo** | Convertir comportamiento comercial verificable de Tiendanube en segmentos, cohortes y propuestas publicitarias accionables. |
+| **Implementación requerida** | Pantalla independiente integrada con distribución y métricas por segmento, matriz y evolución de cohortes y propuestas con nombre, objetivo, segmento, cantidad calculable/divulgable, inclusiones/exclusiones, evidencia, justificación, estrategia y límites. RFM completo, incluida resolución y validación de Monetary; métricas de cohortes solo cuando sean válidas. Motor determinístico versionado, tenant de servidor, agregados bajo RLS, minimización y privacidad. |
+| **Procedimiento del asistente** | Pipeline oficial, TDD y una sola microfase. Investigar y validar semántica monetaria en entorno autorizado antes de habilitar montos. Aplicar §18 de la spec y las condiciones de paralelismo de II.14d. Sin LLM ni escrituras externas. No crear/exportar/sincronizar audiencias. |
+| **Evidencia de cierre** | sesiones/M27a.md: rojo/verde, comandos y resultados reales, conciliación monetaria sintética y contrato oficial, reglas/versiones/cobertura, aislamiento entre empresas, privacidad, estados insuficientes y recorrido de pantalla. Sin PII ni montos/IDs reales. |
+| **Criterio de aceptación** | R/F/M reproducibles sobre mismas entradas, Monetary validado sin doble descuento ni sustitutos silenciosos; ausencia distinta de cero; monedas separadas; cohortes y propuestas respaldadas por evidencia; protección de grupos pequeños y no exposición de identidades; ninguna escritura externa. |
+| **Pruebas** | npm run verify, npm run db:check:test, npm run test:policies y npm run test:app en desechable autorizado; casos monetarios y recorrido sintéticos; evidencia de validación del contrato de lectura con tienda de prueba autorizada. |
+| **Condición para avanzar** | Usuario aprueba G-SEGMENTOS-AUDIENCIAS tras auditorías, revisiones y QA del pipeline. Monetary no validado bloquea el gate: RF no equivale a RFM. No habilita automáticamente otra microfase ni modifica G-DEMO. |
+| **Dependencias / habilita** | G-TIENDA / sin sucesora automática. Paralela a M16f con aislamiento y coordinación; no depende de GA4 ni de una conexión Meta para formular propuestas. |
+| **Intervención requerida del usuario** | Aprobar futura spec y plan y decisiones materiales; autorizar entorno/tienda de pruebas y preparar pedidos sintéticos fuera del runtime PRAXA; aprobar y comunicar finalidad ampliada antes de datos reales; ejecutar migraciones/publicación cuando corresponda y aprobar gate. No compartir secretos. |
 
 ### M28.3a — Demo con el dueño y cierre del piloto
 
@@ -954,6 +974,30 @@ GA4 entra al chat y al diagnóstico (D-M16f-03). La interfaz va dentro de Integr
 
 ---
 
+## II.14d M27a — Autorización de alcance y archivos
+
+Enmienda aprobada el 2026-11-17. Esta sección autoriza la futura microfase; no es su plan de implementación ni inicia su expansión. Contrato: spec de la ruta §18. Decisiones, investigación y condiciones de paralelismo: [enmienda](revisiones/enmienda-rfm-cohortes-audiencias-2026-11-17.md).
+
+| Grupo autorizado | Alcance permitido |
+|---|---|
+| src/modules/customer-insights/ | Motor, contratos, reglas, cálculo exacto, calidad, propuestas y adaptador server-only propios; ningún proveedor LLM. |
+| src/app/(app)/app/clientes/ y src/components/customer-insights/ | Pantalla integrada RFM/cohortes/propuestas, estilos y estados honestos. Verificar ruta libre al expandir. |
+| src/components/app/ | Solo navegación de la nueva pantalla; la spec debe identificar archivos concretos y coordinar con M16f. |
+| src/modules/integrations/tiendanube/{projection,sync,repository,analysis,limits}.ts | Solo cambios necesarios para validar/publicar insumos monetarios y su calidad; sin activar montos globalmente en consumidores existentes ni modificar OAuth o permisos externos. |
+| src/modules/integrations/db/worker-api.ts | Solo firmas nuevas requeridas para esta funcionalidad, coordinadas con M16f; no ampliar privilegios genéricos. |
+| supabase/migrations/ (solo nuevas) | Datos/lecturas/privilegios necesarios y adaptación de borrado/purga para derivados; número siguiente libre coordinado, sin modificar migraciones existentes. |
+| supabase/tests/ | Nueva suite específica y regresiones de Tiendanube, aislamiento, privilegios y cierre; identificar archivos concretos en la spec. |
+| tests/{unit,component,app}/ | Pruebas específicas y regresiones de consumidores afectados; datos sintéticos, sin modificar contratos de GA4/chat/diagnóstico. |
+| docs/SECURITY.md, docs/ARCHITECTURE.md | Propiedades de privacidad, acceso, borrado y responsabilidad del nuevo módulo, conforme al contrato documental; no presentar lo previsto como vigente. |
+| docs/FASES/FASE1/M03a/acta-meta.md | Finalidad ampliada y minimización; aprobación y comunicación antes del uso real. |
+| docs/FASES/FASE1/M27a/{spec,plan}.md, revisiones/; meta_first/sesiones/M27a.md; docs/{HALLAZGOS,PROJECT_STATE}.md | Artefactos y seguimiento del pipeline; no creados automáticamente por esta enmienda. |
+
+No se autorizan dependencias nuevas, cambios en package.json/lockfile, herramientas de chat, diagnóstico, reporting, GA4, permisos externos ni endpoints de exportación. Si fueran necesarios, detenerse para enmendar alcance antes de actuar. La spec deberá concretar archivos dentro de estos grupos.
+
+Paralelismo: checkout/rama independientes, sin alterar trabajo ajeno; coordinación explícita de archivos compartidos y numeración de migraciones; uso exclusivo del desechable durante pruebas/migraciones o destino separado autorizado; revalidación sobre base integrada. Sin disponibilidad de esos recursos se espera para el trabajo afectado. G-GA4-FUSION no es dependencia funcional. No ejecutar dos microfases a la vez dentro de una misma sesión del asistente; el trabajo independiente de otro integrante puede continuar.
+
+---
+
 ## II.15 `M28.3a` — Demo con el dueño y cierre
 
 > Antes `II.14`; las referencias a `II.14` en documentos anteriores a la enmienda de `M26a` se refieren a esta demo.
@@ -1023,6 +1067,8 @@ El detalle y los criterios de aceptación están en la spec v1.0.
 
 ## III.2 Intervenciones del usuario, en orden
 
+M27a: intervenciones enumeradas en su ficha de Parte I. La aprobación de esta enmienda no reemplaza aprobar spec, plan, finalidad del tratamiento ni gate.
+
 | Microfase | Qué tenés que hacer |
 |---|---|
 | `M04a` | Aprobar la Enmienda 1. Decidir la visibilidad del repositorio y la reescritura del historial |
@@ -1071,6 +1117,7 @@ Ninguna clave se pega en el chat.
 | `M26a` | `test:policies`, `test:app`, `test:eval` del diagnóstico, inspección manual de PDF y recorrido de la pantalla |
 | `M16e` | `db:check:test`, `test:policies`, `test:app` en cada control de etapa; caso real con pedidos y caso de privacidad |
 | `M16f` | `db:check:test`, `test:policies`, `test:app`; `checkCompatibility` y preflight de instrumentación; lectura y comparación reales |
+| M27a | db:check:test, test:policies, test:app; conciliación monetaria sintética, aislamiento, privacidad, regresiones y recorrido de pantalla; verify obligatorio |
 | `M28.3a` | Checklists de la demo y del cierre |
 
 Toda evidencia registra los comandos y sus resultados reales. Nada se declara probado si no se ejecutó (CB-05). Un gate no se aprueba si una prueba requerida se omitió por falta de configuración (CB-06).
@@ -1152,6 +1199,8 @@ IDs sugeridos. Si chocan con los existentes, se sigue la numeración vigente.
 | H-E1-13 | La evidencia de M00 no prueba el flujo del producto: quien autorizó tenía rol en la app | `M16.1` |
 
 ## III.8 Qué se ve funcionando al terminar cada microfase
+
+M27a: pantalla integrada de RFM completo, cohortes válidas y propuestas locales verificables; sin Monetary validado no se acredita su gate. No modifica lo que M16f debe entregar.
 
 | Al terminar | Lo que se ve |
 |---|---|
