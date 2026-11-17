@@ -1,6 +1,6 @@
 # M27a — RFM, cohortes y propuestas de audiencias
 
-**Estado:** BORRADOR
+**Estado:** APROBADA
 
 Estados: BORRADOR → APROBADA. Solo el usuario aprueba después de una auditoría APROBABLE. Una única microfase, una spec, un plan y un gate: `G-SEGMENTOS-AUDIENCIAS`. Ningún control interno es un gate adicional.
 
@@ -13,7 +13,7 @@ grep -v '^\*\*Estado:\*\*' docs/FASES/FASE1/M27a/spec.md | git hash-object --std
 ## Fuentes
 
 - Ruta: `docs/FASES/FASE1/meta_first/plan.md:461` (ficha), `:977` (II.14d), III.3 y III.9; `meta_first/spec.md:743` (§18).
-- Commit base inspeccionado: `98c0bfd4ddeb7cba080a4c01b6c80f3675c20759`, rama main, 2026-11-17. La enmienda aprobada está sin commit en cinco archivos; se preserva. No se atribuye su contenido al commit base.
+- Estado de referencia inspeccionado para esta corrección: commit `d349b987174aaa92463006cd390d7aefb7983418`, rama `mf/M27a`, 2026-11-17. Ese commit ya contiene la enmienda aprobada en seis archivos. Sobre él, el árbol tenía modificada esta spec y agregado `revisiones/spec-audit-1.md`; esos cambios posteriores no se atribuyen al commit.
 - `AGENTS.md`, `docs/PIPELINE.md`, plantilla `docs/_templates/mf-spec.md`, SECURITY, ARCHITECTURE, PROJECT_STATE, HALLAZGOS y enmienda `meta_first/revisiones/enmienda-rfm-cohortes-audiencias-2026-11-17.md`.
 - Dependencia: M16e, `G-TIENDA` aprobado con excepciones; evidencia `meta_first/sesiones/M16e.md`, cierre del paso 14. La excepción monetaria de M16e no permite cerrar M27a. M16f es trabajo paralelo, no dependencia.
 - Código y migraciones citados abajo; `M16e/spec.md` §§3–6 y M16e-H-06; `M16f/plan.md`, tabla Archivos, para coordinación.
@@ -28,7 +28,7 @@ Convertir comportamiento comercial verificable de Tiendanube en segmentos, cohor
 
 RFM completo, incluida una definición monetaria validada; análisis de cohortes cuya validez esté acreditada; pantalla independiente integrada en `/app/clientes`; motor de reglas determinístico y versionado para propuestas. Distribución y métricas económicas por segmento, matriz de retención, evolución temporal y fichas de propuestas forman un único producto.
 
-La validación monetaria, TDD, privilegios, aislamiento, calidad, privacidad, disponibilidad y borrado son obligatorios. Esta spec desarrolla un diseño candidato completo: las elecciones materiales Q-01 a Q-08 están abiertas, con alternativa recomendada concreta. Los apartados afectados no son requisitos aprobados hasta resolverlas. No se implementa una alternativa por defecto por falta de respuesta.
+La validación monetaria, TDD, privilegios, aislamiento, calidad, privacidad, disponibilidad y borrado son obligatorios. El grill cerró Q-01 a Q-08. Para Monetary se aprobó un diseño condicional A/B/C: la implementación comienza con Monetary indisponible, ejecuta T-04 en un entorno autorizado y solo habilita la definición A o B si la evidencia es concluyente; C bloquea el gate. No se presenta RF como RFM ni se divide la microfase.
 
 ## Fuera de alcance
 
@@ -50,8 +50,9 @@ Sin nuevas dependencias o cambios de package/lockfile. No activar `TN_COLLECTED_
 | Cohortes privadas se calculan antes de supresión | supabase/migrations/0023_tiendanube.sql:688 | Los conteos ya ocultos del getter no permiten reconstruir RF/M. |
 | Getter existente | supabase/migrations/0023_tiendanube.sql:2604 | get_tn_cohorts(uuid,date,date,integer): meses, offset, tamaño/activos/retención, ocultamiento, parcial, fetched_at, zona y definition; INVOKER. |
 | Tablas privadas sin grants y públicas con RLS | supabase/migrations/0023_tiendanube.sql:522 y :578 | Agregar salida agregada propia; no abrir lectura privada. |
-| Monto global deshabilitado | src/modules/integrations/tiendanube/limits.ts:12 | Mantener false; validación propia no habilita chat/diagnóstico. |
-| Proyección cerrada de pedidos | src/modules/integrations/tiendanube/projection.ts:39 y :143 | Extender solo campos de calidad estrictamente necesarios; nunca payload bruto ni PII. |
+| Monto global deshabilitado | src/modules/integrations/tiendanube/limits.ts:11 | Mantener false; validación propia no habilita chat/diagnóstico. |
+| Proyección cerrada de pedidos | src/modules/integrations/tiendanube/projection.ts:36-38 y :142-143 | Extender solo campos de calidad estrictamente necesarios; nunca payload bruto ni PII. |
+| El transporte decodifica JSON con `JSON.parse`; la proyección decimal heredada acepta `number` y lo convierte a texto | src/modules/integrations/tiendanube/client.ts:127; src/modules/integrations/tiendanube/projection.ts:94-99 | El flujo monetario de M27a no reutiliza esa conversión: rechaza tokens numéricos JSON antes de declarar un importe exacto. |
 | Historia de reembolsos reconoce varias formas y convierte números con toFixed(2) | src/modules/integrations/tiendanube/projection.ts:240 | No acreditar contrato, precisión ni completitud por esta función; validación cerrada para M27a. |
 | Historial se lee solo para refunded/partially_refunded; presupuesto/error deja nulo | src/modules/integrations/tiendanube/sync.ts:315 | No tratar nulo como cero ni inferir que paid nunca tuvo una edición. |
 | Publicación con actor, empresa, generación, run y lease | src/modules/integrations/tiendanube/repository.ts:55 y :113 | Preservar ownership y compatibilidad de publicación. |
@@ -59,12 +60,12 @@ Sin nuevas dependencias o cambios de package/lockfile. No activar `TN_COLLECTED_
 | allowlist SQL y aridades del cliente privilegiado | src/modules/integrations/db/worker-api.ts:9 y :86 | No usar SQL arbitrario ni crear otro cliente; no hace falta ampliar rol para el diseño recomendado. |
 | Pantalla Tiendanube solo lee agregados | src/modules/integrations/tiendanube/analysis.ts:138 y :205 | Mantener sus contratos; no reutilizar su DTO sin importes como RFM. |
 | Navegación central | src/components/app/shell.tsx:27 y :42 | Añadir Clientes con icono existente, sin modificar estado de fuentes. Ruta /app/clientes no existe en la inspección. |
-| Página protegida verifica sesión independientemente | src/app/(app)/app/anomalias/page.tsx:14; src/modules/app-data/index.ts:34 | Seguir el patrón de sesión; no confiar solo en layout/proxy. |
+| Página protegida verifica sesión independientemente | src/app/(app)/app/anomalias/page.tsx:13; src/modules/app-data/index.ts:34 | Seguir el patrón de sesión; no confiar solo en layout/proxy. |
 | RPC públicas invoker y definer solo no expuestos | docs/ARCHITECTURE.md:146; docs/SECURITY.md:159 | Mantener separación, search_path vacío, grants mínimos y chequeos por capa. |
 | Proyectos unit/component/app y suites remotas secuenciales | vitest.config.mts:26 y :67 | Tests nuevos entran sin modificar configuración. |
 | Scripts de verificación disponibles | package.json:8 | Usar comandos existentes, no inventar scripts. |
-| Fixtures app con backend real y cleanup por RUN_ID | tests/app/tiendanube-data-api.test.ts:20 | Reutilizar helpers; aserciones con JWT, no service_role. |
-| Gate de entrada cerrado y paralelismo autorizado | docs/PROJECT_STATE.md:26 y :45 | Expandir ahora; coordinar implementación futura sin esperar G-GA4-FUSION. |
+| Fixtures app con backend real y cleanup por RUN_ID | tests/app/tiendanube-data-api.test.ts:21 | Reutilizar helpers; aserciones con JWT, no service_role. |
+| Gate de entrada cerrado y paralelismo autorizado | docs/PROJECT_STATE.md:28 y :45 | Expandir ahora; coordinar implementación futura sin esperar G-GA4-FUSION. |
 | Monetaria pendiente estable | docs/HALLAZGOS.md:859 | H-E1-270 bloquea M y cierre; no bloquea redactar esta spec. |
 
 ## Diseño concreto
@@ -76,22 +77,308 @@ Los nombres de esta sección son **previstos**, salvo los citados como existente
 - `src/modules/customer-insights/contract.ts`: esquemas Zod estrictos para DTO público, reglas y ausencias; ninguna clave de empresa, tienda, cliente, pedido o conexión en el DTO que cruza a componentes.
 - `rules.ts`: definiciones versionadas, textos fijos, códigos de segmento y propuesta; sin red ni acceso a entorno.
 - `proposals.ts`: `buildAudienceProposals(view: InsightsData): readonly AudienceProposal[]`; recibe solo agregados sanitizados y evidencia tipada. No produce cifras nuevas salvo formateo; elige plantillas por reglas.
-- `load.ts`: `loadCustomerInsightsView(): Promise<CustomerInsightsView>`, server-only, requireTenantContext + conexión por proveedor + cliente Supabase del servidor. Ningún argumento de tenant. Error de autorización se trata sin revelar existencia de otra empresa.
+- `load.ts`: `loadCustomerInsightsView(requestedCurrency: unknown = null): Promise<CustomerInsightsView>`, server-only, requireTenantContext + conexión por proveedor + cliente Supabase del servidor. El único dato de entrada es `currency` de searchParams; nunca se aceptan argumentos de tenant, empresa o conexión. Error de autorización se trata sin revelar existencia de otra empresa.
 - `page.tsx`: requireAppSession('/app/clientes'), loader, PageHeader y componente. Sin filtros arbitrarios, consultas de personas, demo de producción ni efectos de escritura en GET.
 - SQL hace agrupación, RF/M y cohortes con numeric exacto. TypeScript selecciona propuestas sobre agregados; pruebas usan oráculos de fixtures escritos a mano, no copias del SQL.
 - Strings decimales para dinero, tasas y medias; contadores enteros seguros. Sin parseFloat/sumas binarias de moneda. El formato visual redondea solo al final y conserva la precisión de cálculo. JSON de entrada/salida validado, límites y versiones cerrados.
 
-`CustomerInsightsView` es unión discriminada: `sin_empresa | sin_conexion | requiere_reauth | sin_cobertura | sin_compras | monetario_no_validado | calidad_insuficiente | privacidad | listo | error`. Cada estado tiene mensaje fijo, período/fuente cuando exista y secciones disponibles; `monetario_no_validado` puede conservar cohortes válidas, nunca simular RFM completo.
+#### 1.1 Contrato público exacto
 
-`InsightsData`: `ruleset='rfm_v1'`, `source='tiendanube'`, `asOfDay`, `fetchedAt`, `timezone`, `currency`, `rfmFrom`, `firstPurchaseBasis='observada'`, `quality`, `segments`, `cohorts`, `productEvidence`. Cada métrica es `{ value: string|null, absence: null|'sin_cobertura'|'periodo_abierto'|'monetario_no_validado'|'dato_incompleto'|'privacidad'|'sin_denominador', definition: string }`. No inferir ausencia a partir del valor; validaciones impiden valor y absence simultáneos.
+Todos los objetos son `strict` en Zod: claves desconocidas fallan. Días y meses usan `YYYY-MM-DD` y `YYYY-MM`; instantes, ISO 8601 con zona; moneda, `[A-Z]{3}`. Ninguna forma contiene IDs de empresa, conexión, tienda, cliente, pedido, producto o variante.
 
-`AudienceProposal`: `id`, `ruleVersion`, `name`, `objective`, `segmentRefs`, `identifiedCustomers` (métrica o null con motivo), `inclusion`, `exclusion`, `evidenceRefs`, `justification`, `suggestedStrategy`, `limitations`. Sin listas ni identificadores individuales. Solo códigos de segmentos y referencias a celdas del mismo DTO; ningún texto del catálogo funciona como regla.
+```ts
+type Absence =
+  | 'sin_cobertura'
+  | 'periodo_abierto'
+  | 'monetario_no_validado'
+  | 'dato_incompleto'
+  | 'privacidad'
+  | 'sin_denominador';
 
-### 2. Datos y publicación agregada (diseño recomendado, Q-01)
+type MetricUnit =
+  | 'customers'
+  | 'orders'
+  | 'currency'
+  | 'days'
+  | 'ratio'
+  | 'orders_per_customer'
+  | 'intervals';
 
-Se recomienda **un snapshot agregado vigente por conexión y moneda**, no perfiles nuevos persistidos. Alternativa y decisión en Q-01. La recomendación permite RLS de lectura sin otorgar SELECT privado a authenticated.
+type Metric = Readonly<{
+  value: string | null;
+  absence: Absence | null;
+  unit: MetricUnit;
+  definition: DefinitionCode;
+}>;
+```
+
+`value` y `absence` son XOR. Conteos e intervalos son enteros decimales seguros `>=0`; dinero y medias son decimales exactos `>=0`; `ratio` está entre `0` y `1`. No hay `number` para dinero, tasas o medias. Cada campo fija su unidad y definición mediante esta tabla; no se aceptan otras combinaciones:
+
+| Ruta de métrica | `unit` | `definition` | `absence` permitidas |
+|---|---|---|---|
+| `segments.totalCustomers` | `customers` | `segment_total_customers_v1` | ninguna si la sección está disponible |
+| `segments.excludedBeforeWindow` | `customers` | `excluded_before_window_v1` | `privacidad` |
+| `segments.rows[].customers` | `customers` | `segment_customers_v1` | ninguna si la sección está disponible |
+| `segments.rows[].orders` | `orders` | `segment_orders_v1` | ninguna si la sección está disponible |
+| `segments.rows[].monetary` | `currency` | `segment_monetary_v1` | ninguna si la sección está disponible |
+| `segments.rows[].monetaryPerCustomer` | `currency` | `segment_monetary_per_customer_v1` | `sin_denominador` solo para fila vacía |
+| `segments.rows[].monetaryPerOrder` | `currency` | `segment_monetary_per_order_v1` | `sin_denominador` solo para fila vacía |
+| `segments.rows[].recencyMedianDays` | `days` | `segment_recency_median_days_v1` | `sin_denominador` solo para fila vacía |
+| `segments.rows[].frequencyMean` | `orders_per_customer` | `segment_frequency_mean_v1` | `sin_denominador` solo para fila vacía |
+| `cohorts.rows[].size` | `customers` | `cohort_size_observed_v1` | ninguna; una cohorte protegida se omite completa |
+| `cohorts.rows[].cells[].activeCustomers` | `customers` | `cohort_active_v1` | `sin_cobertura`, `periodo_abierto`, `privacidad` |
+| `cohorts.rows[].cells[].retention` | `ratio` | `cohort_retention_v1` | las anteriores, `sin_denominador` |
+| `cohorts.rows[].cells[].repeatPurchaseCumulative` | `ratio` | `cohort_repeat_cumulative_v1` | `sin_cobertura`, `periodo_abierto`, `privacidad`, `sin_denominador` |
+| `cohorts.rows[].cells[].observedValue` | `currency` | `cohort_observed_value_v1` | `sin_cobertura`, `periodo_abierto`, `monetario_no_validado`, `dato_incompleto`, `privacidad` |
+| `cohorts.rows[].cells[].ticket` | `currency` | `cohort_ticket_v1` | las anteriores, `sin_denominador` |
+| `cohorts.rows[].cells[].observedValuePerCustomerCumulative` | `currency` | `cohort_observed_value_per_customer_cumulative_v1` | las anteriores, `sin_denominador` |
+| `cohorts.rows[].cells[].meanDaysBetweenPurchases` | `days` | `cohort_mean_days_between_purchases_v1` | `sin_cobertura`, `periodo_abierto`, `dato_incompleto`, `privacidad`, `sin_denominador` |
+| `cohorts.rows[].cells[].repeatCustomers` | `customers` | `cohort_repeat_customers_v1` | `sin_cobertura`, `periodo_abierto`, `dato_incompleto`, `privacidad` |
+| `cohorts.rows[].cells[].purchaseIntervals` | `intervals` | `cohort_purchase_intervals_v1` | `sin_cobertura`, `periodo_abierto`, `dato_incompleto`, `privacidad` |
+| `proposals[].identifiedCustomers` | `customers` | `proposal_identified_customers_v1` | ninguna cuando existe; si es nula rige `identifiedCustomersAbsence` |
+
+`DefinitionCode` es exactamente la unión de los valores de la columna `definition` (tercera columna) de la tabla anterior. El texto visible de cada definición vive en el catálogo cerrado de `rules.ts`, indexado por ese código.
+
+```ts
+type MonetaryDefinition =
+  | 'tn_paid_current_observed_v1'
+  | 'tn_paid_current_less_verified_refunds_v1';
+
+type InsightQuality = Readonly<{
+  coverage: Readonly<{
+    fromDay: string | null;
+    throughDay: string | null;
+    complete: boolean;
+  }>;
+  identity: 'completa' | 'incompleta' | 'no_evaluable';
+  monetary: Readonly<{
+    status: 'verified' | 'unverified' | 'incomplete' | 'inconsistent';
+    definition: MonetaryDefinition | null;
+  }>;
+  catalog: 'completo' | 'incompleto';
+  orderLines: 'completas' | 'incompletas';
+}>;
+
+type SegmentCode =
+  | 'inactivos'
+  | 'riesgo'
+  | 'nuevos'
+  | 'alto_valor'
+  | 'frecuentes'
+  | 'potencial';
+
+type SegmentRow = Readonly<{
+  code: SegmentCode;
+  customers: Metric;
+  orders: Metric;
+  monetary: Metric;
+  monetaryPerCustomer: Metric;
+  monetaryPerOrder: Metric;
+  recencyMedianDays: Metric;
+  frequencyMean: Metric;
+}>;
+
+type SegmentSection =
+  | Readonly<{
+      status: 'available';
+      totalCustomers: Metric;
+      excludedBeforeWindow: Metric;
+      rows: readonly [SegmentRow, SegmentRow, SegmentRow, SegmentRow, SegmentRow, SegmentRow];
+    }>
+  | Readonly<{
+      status: 'unavailable';
+      absence: 'monetario_no_validado' | 'dato_incompleto' | 'privacidad';
+      definition: 'segment_partition_v1';
+    }>;
+
+type CohortCell = Readonly<{
+  offset: number;
+  calendarMonth: string;
+  activeCustomers: Metric;
+  retention: Metric;
+  repeatPurchaseCumulative: Metric;
+  observedValue: Metric;
+  ticket: Metric;
+  observedValuePerCustomerCumulative: Metric;
+  meanDaysBetweenPurchases: Metric;
+  repeatCustomers: Metric;
+  purchaseIntervals: Metric;
+}>;
+
+type CohortRow = Readonly<{
+  cohortMonth: string;
+  size: Metric;
+  cells: readonly CohortCell[];
+}>;
+
+type CohortSection =
+  | Readonly<{ status: 'available'; rows: readonly CohortRow[] }>
+  | Readonly<{
+      status: 'unavailable';
+      absence: 'sin_cobertura' | 'dato_incompleto' | 'privacidad';
+      definition: 'cohorts_observed_v1';
+    }>;
+
+type CrossSellEvidence =
+  | Readonly<{
+      status: 'available';
+      sourceSegment: 'frecuentes' | 'alto_valor';
+      productAName: string;
+      productBName: string;
+      coPurchaseSufficient: true;
+      targetSufficient: true;
+      identifiedCustomers: null;
+      identifiedCustomersAbsence: 'privacidad';
+      definition: 'cross_sell_pair_v1';
+    }>
+  | Readonly<{
+      status: 'unavailable';
+      absence: 'dato_incompleto' | 'privacidad' | 'monetario_no_validado';
+      definition: 'cross_sell_pair_v1';
+    }>;
+
+type ProductEvidenceSection = Readonly<{
+  catalogComplete: boolean;
+  linesComplete: boolean;
+  crossSell: CrossSellEvidence;
+}>;
+
+type InsightsData = Readonly<{
+  ruleset: 'rfm_v1';
+  source: 'tiendanube';
+  asOfDay: string;
+  fetchedAt: string;
+  timezone: string;
+  currency: string;
+  rfmFrom: string;
+  firstPurchaseBasis: 'observada';
+  quality: InsightQuality;
+  segments: SegmentSection;
+  cohorts: CohortSection;
+  productEvidence: ProductEvidenceSection;
+}>;
+```
+
+Procedencia persistida de calidad, evaluada para la generación actual y antes de sanitizar el snapshot:
+
+- Nueva columna privada `tn_orders.insights_identity_status`: `verified | absent | invalid | unverified`. En `projectOrder`, customer ausente/nulo o `customer.id` ausente/nulo produce `absent`; objeto customer no válido o un ID presente con forma inválida produce `invalid`; un ID válido produce `verified`. Las filas existentes reciben `unverified` en la migración y solo se vuelven a evaluar mediante una relectura autorizada del historial, nunca por inferencia retrospectiva.
+- Nueva columna privada `tn_orders.insights_lines_status`: `complete | source_omitted | source_invalid | line_omitted | unverified`. `products` ausente produce `source_omitted`; presente pero no-array produce `source_invalid`; una línea descartada por forma inválida, falta de `product_id` válido o límite de líneas produce `line_omitted`; solo un array completo cuyos elementos cumplen el contrato y tienen `product_id` válido produce `complete`. Las filas existentes reciben `unverified` hasta su relectura.
+- Nuevos campos de estado en `public.tn_sync_status`: `insights_catalog_status` (`unknown | cycle_incomplete | omitted_items | complete`) e `insights_catalog_has_omissions boolean`. Al iniciar un recorrido nuevo se reinicia la marca de omisiones; cada página la acumula, y solo la última página fija `complete` si no hubo elementos omitidos, o `omitted_items` si los hubo. Un corte, error o presupuesto agotado antes de la última página deja `cycle_incomplete`. Un cambio de generación vuelve el estado a `unknown`. No se persisten ni exponen conteos de omisiones.
+- Cada llamada existente a `tn_publish_catalog` envía en `p_state` `new_traversal` (true solo en la página 1) y `has_omitted_products` (resultado booleano de esa página). La base reinicia el acumulador solo con `new_traversal`, conserva el OR de omisiones de páginas previas y usa el argumento existente `complete` para cerrar el recorrido; no se cambia la aridad ni se agregan casts.
+- `quality.identity='completa'` solo si existe cobertura completa y todos los pedidos elegibles, no suprimidos y dentro de la ventana tienen estado `verified`; es `incompleta` si cualquiera tiene `absent`, `invalid` o `unverified`; es `no_evaluable` si no hay pedidos elegibles para evaluar. No se divulgan cantidades de casos por estado.
+- `quality.orderLines='completas'` solo si todos esos pedidos tienen `insights_lines_status='complete'`; cualquier otro estado la hace `incompletas`. `quality.catalog='completo'` solo si el estado persistido es `complete`. La interrupción de ciclo, la omisión de productos o los estados iniciales no se convierten en completitud por el hecho de que exista un catálogo anterior.
+- `productEvidence.catalogComplete` y `linesComplete` son exactamente esos dos resultados. `crossSell` se abstiene con `dato_incompleto` si cualquiera es falso o si las líneas candidatas no enlazan a productos vigentes del mismo catálogo/conexión. Aun con ambas calidades completas, solo está disponible cuando se cumplen los dos umbrales k=5 de §7; no persiste ni devuelve conteos o claves del par. La calidad incompleta no bloquea propuestas que no dependan de productos.
+
+Reglas de cardinalidad: `segments.rows` contiene los seis códigos exactamente una vez y en el orden de prioridad de §4; si un grupo de 1–4 obliga supresión, se usa la variante `unavailable`, nunca filas parciales. `cohorts.rows` tiene como máximo 24 meses únicos y descendentes; cada fila tiene offsets enteros únicos `0..12`, ordenados. La evolución se deriva exclusivamente de esas celdas y no se duplica en `payload`. Los nombres de producto tienen 1–255 caracteres, son texto no confiable escapado por React y nunca incluyen IDs.
+
+`productEvidence.catalogComplete` equivale a `quality.catalog==='completo'` y `linesComplete` a `quality.orderLines==='completas'`; `crossSell.status='available'` exige ambos verdaderos. Una contradicción entre esos campos invalida todo el payload.
+
+El `payload jsonb` de `public.tn_customer_insights` es exactamente `InsightsData`, sin envoltorio ni propuestas. SQL lo produce; `contract.ts` lo valida al leer. Las propuestas se construyen después, en servidor, y se agregan solo a la vista:
+
+```ts
+type ViewContext = Readonly<{
+  source: 'tiendanube';
+  asOfDay: string | null;
+  fetchedAt: string | null;
+  timezone: string | null;
+  currency: string | null;
+  rfmFrom: string | null;
+}>;
+
+type CurrencySelection = Readonly<{
+  availableCurrencies: readonly string[];
+  selectedCurrency: string | null;
+}>;
+
+type CustomerInsightsView = CurrencySelection & (
+  | Readonly<{ kind: 'sin_empresa' }>
+  | Readonly<{ kind: 'sin_conexion'; actionHref: '/app/integraciones' }>
+  | Readonly<{ kind: 'requiere_reauth'; actionHref: '/app/integraciones' }>
+  | Readonly<{ kind: 'actualizando' }>
+  | Readonly<{ kind: 'sin_cobertura'; context: ViewContext; actionHref: '/app/integraciones' }>
+  | Readonly<{ kind: 'sin_compras'; context: ViewContext }>
+  | Readonly<{ kind: 'monetario_no_validado'; data: InsightsData; proposals: readonly AudienceProposal[] }>
+  | Readonly<{ kind: 'calidad_insuficiente'; data: InsightsData; proposals: readonly AudienceProposal[] }>
+  | Readonly<{ kind: 'privacidad'; data: InsightsData; proposals: readonly AudienceProposal[] }>
+  | Readonly<{ kind: 'listo'; data: InsightsData; proposals: readonly AudienceProposal[] }>
+  | Readonly<{ kind: 'error' }>
+);
+```
+
+La página pasa al loader solo `searchParams.currency`; el valor es no confiable y se valida como un único string `[A-Z]{3}` (una lista repetida también es inválida). El loader obtiene `availableCurrencies` de las filas de `public.tn_customer_insights` visibles mediante el JWT y RLS, para la conexión activa y generación actual, en orden ascendente. Si el parámetro falta o es nulo, elige la primera moneda disponible en ese orden; si no hay filas, `selectedCurrency=null`. Primero se rechaza una forma malformada; luego se resuelve tenant/conexión y `needs_reauth`; `last_run_status='running'` devuelve `actualizando` aun si el snapshot fue invalidado. Con cobertura incompleta o sin última ejecución completa devuelve `sin_cobertura`. Con cobertura completa y `last_run_status='complete'`, si no hay monedas ni pedidos elegibles en `tn_sales_daily` dentro de `[C-364,C]`, devuelve `sin_compras`; si hay pedidos elegibles pero todavía no existe snapshot, devuelve `sin_cobertura`, nunca `sin_compras`. Tras esos estados, un parámetro válido pero no disponible en estado idle con snapshot disponible devuelve `kind='error'` genérico con `selectedCurrency=null` y sin consultar el getter. Para una selección válida llama `get_tn_customer_insights` con esa moneda, y valida que `payload.currency` coincida; una discrepancia es error. El selector cambia la moneda mediante GET `?currency=XXX`; no se aceptan `company_id` ni `connection_id` en URL, formulario o loader. En estados sin empresa/conexión/monedas, `availableCurrencies=[]` y `selectedCurrency=null`. No se infieren monedas a partir de pedidos privados.
+
+Los mensajes se eligen por `kind` desde texto fijo y no viajan en el DTO. El loader resuelve la primera coincidencia en este orden: error inesperado o currency con forma inválida → `error`; sin empresa; sin conexión; `needs_reauth`; sync en curso → `actualizando`; cobertura incompleta/sin ejecución completa → `sin_cobertura`; sin compras (incluido el caso sin moneda con cobertura completa definido arriba) → `sin_compras`; currency con forma válida pero no disponible → `error`; `monetary.status='unverified'`; calidad insuficiente según la tabla siguiente; supresión de privacidad que impide la sección principal; en otro caso, `listo`.
+
+| Estado validado de calidad | `kind` de vista | `segments` | Efecto |
+|---|---|---|---|
+| Sync en curso y snapshot invalidado por start/publicación | `actualizando` | No hay `InsightsData` | La UI muestra «El análisis se está actualizando»; no conserva ni devuelve el snapshot anterior. |
+| Cobertura completa y no hay pedidos elegibles ni moneda disponible | `sin_compras` | No hay `InsightsData` | `availableCurrencies=[]`; no se inventa una moneda o un cero de actividad. |
+| `monetary.status='unverified'`, definición nula | `monetario_no_validado` | `unavailable`, ausencia `monetario_no_validado` | Monetary y métricas económicas indisponibles; se conservan cohortes no monetarias válidas y solo propuestas no dependientes de M. |
+| `monetary.status='incomplete'` o `'inconsistent'`, definición nula | `calidad_insuficiente` | `unavailable`, ausencia `dato_incompleto` | No se publica M; no se habilitan alto valor ni propuestas dependientes de M. |
+| Identidad incompleta, catálogo incompleto o líneas incompletas | `calidad_insuficiente` | Los segmentos solo cuentan IDs válidos; `quality.identity` señala que no representan todas las órdenes elegibles. No se divulga cantidad de invitados/error. | Las propuestas pueden usar evidencia disponible, pero `identifiedCustomers=null` con `dato_incompleto` si la identidad no es completa; venta cruzada se abstiene si falla catálogo/líneas. |
+| `monetary.status='verified'` con definición A/B vigente, calidad suficiente y al menos una sección principal suprimida | `privacidad` | Ausencia `privacidad` donde corresponda | No se reconstruyen valores ni se publican grupos protegidos. |
+| `monetary.status='verified'` con definición A/B vigente, calidad suficiente, sin supresión que impida la sección principal | `listo` | `available` o la forma permitida por privacidad de §6 | Solo incluye métricas y propuestas respaldadas y divulgables. |
+
+`monetary.status='verified'` requiere que cada pedido elegible del universo tenga estado verificado, fórmula persistida igual a `M27A_MONETARY_DEFINITION` y evidencia T-04 registrada; un estado verificado sin definición o una definición discrepante invalida el payload y produce `error`. `unverified` con definición no nula también es inválido. `incomplete` e `inconsistent` nunca se traducen a `monetario_no_validado`: son `dato_incompleto`. `privacidad` exige al menos `segments`, `cohorts` o `productEvidence.crossSell` indisponible por privacidad. Un error no lleva texto del proveedor.
+
+`AudienceProposal` tiene forma exacta:
+
+```ts
+type ProposalId =
+  | 'fidelizacion_v1'
+  | 'remarketing_v1'
+  | 'reactivacion_riesgo_v1'
+  | 'reactivacion_inactivos_v1'
+  | 'exclusion_adquisicion_v1'
+  | 'similares_alto_valor_v1'
+  | 'venta_cruzada_v1';
+
+type CriterionCode =
+  | `segment_${SegmentCode}`
+  | 'comprador_identificado_365d'
+  | 'compro_producto_a'
+  | 'no_compro_producto_b';
+
+type SegmentMetricKey =
+  | 'customers' | 'orders' | 'monetary' | 'monetaryPerCustomer'
+  | 'monetaryPerOrder' | 'recencyMedianDays' | 'frequencyMean';
+type CohortMetricKey =
+  | 'activeCustomers' | 'retention' | 'repeatPurchaseCumulative'
+  | 'observedValue' | 'ticket' | 'observedValuePerCustomerCumulative'
+  | 'meanDaysBetweenPurchases' | 'repeatCustomers' | 'purchaseIntervals';
+type EvidenceRef =
+  | `segments.${SegmentCode}.${SegmentMetricKey}`
+  | `cohorts.${string}.${number}.${CohortMetricKey}`
+  | 'productEvidence.crossSell';
+
+type AudienceProposal = Readonly<{
+  id: ProposalId;
+  ruleVersion: 'audience_rules_v1';
+  name: string;
+  objective: string;
+  segmentRefs: readonly SegmentCode[];
+  identifiedCustomers: Metric | null;
+  identifiedCustomersAbsence: 'privacidad' | 'dato_incompleto' | 'monetario_no_validado' | null;
+  inclusion: readonly CriterionCode[];
+  exclusion: readonly CriterionCode[];
+  evidenceRefs: readonly EvidenceRef[];
+  justification: string;
+  suggestedStrategy: string;
+  limitations: readonly string[];
+}>;
+```
+
+`identifiedCustomers` y `identifiedCustomersAbsence` son XOR; cuando existe la métrica, su unidad/definición son `customers`/`proposal_identified_customers_v1`. `EvidenceRef` debe resolver a una métrica visible del mismo `InsightsData`; mes y offset se validan contra las filas, no solo por regex. `name`, `objective`, `justification`, `suggestedStrategy` y `limitations` coinciden exactamente con el catálogo fijo de `rules.ts`; no son texto de Tiendanube ni reglas libres. No hay listas ni identificadores individuales.
+
+### 2. Datos y publicación agregada (D-M27a-01)
+
+Se aprueba **un snapshot agregado vigente por conexión y moneda**, no perfiles nuevos persistidos. Este diseño permite RLS de lectura sin otorgar SELECT privado a authenticated. Durante sincronización, invalidación o recálculo el análisis queda temporalmente indisponible y la interfaz lo informa con un estado claro; se prioriza consistencia sobre disponibilidad permanente.
 
 Nueva `public.tn_customer_insights`: `company_id uuid not null`, `connection_id uuid not null`, `currency text not null`, `generation integer not null`, `ruleset text not null`, `as_of_day date not null`, `fetched_at timestamptz not null`, `payload jsonb not null`. PK (connection_id,currency); FK compuesta (company_id,connection_id) a integration_connections con cascada, company_id consistente. Solo datos públicos ya sanitizados dentro de payload; no IDs de personas ni conteos ocultos en JSON lateral, atributos, metadatos o errores.
+
+La nueva migración agrega a `private.tn_orders` `insights_identity_status text not null default 'unverified' check (insights_identity_status in ('verified','absent','invalid','unverified'))` e `insights_lines_status text not null default 'unverified' check (insights_lines_status in ('complete','source_omitted','source_invalid','line_omitted','unverified'))`. En `public.tn_sync_status` agrega `insights_catalog_status text not null default 'unknown' check (insights_catalog_status in ('unknown','cycle_incomplete','omitted_items','complete'))`, `insights_catalog_has_omissions boolean not null default false`, `insights_rebuild_pending boolean not null default false` e `insights_rebuild_started boolean not null default false`. La migración no infiere estados históricos: las filas existentes quedan `unverified`/`unknown`; las conexiones con estado de sincronización existente quedan `insights_rebuild_pending=true`. También se limpia `catalog_next_page` para forzar un recorrido de catálogo nuevo desde página 1 y no heredar una parcialidad sin procedencia.
+
+Para consumir `insights_rebuild_pending`, `tn_start_sync` conserva la firma actual y, si el indicador está activo, inicia una ejecución `backfill` desde `historyStart` aunque la sincronización ordinaria ya estuviera en `incremental`. En el primer inicio pone `insights_rebuild_started=true`, `backfill_next=null` y `watermark` al instante actual de base; ante un corte conserva watermark y checkpoint para reanudar. `tn_publish_orders` avanza ese checkpoint con su contrato existente. Un backfill completo en `tn_finish_sync` deja los indicadores en false y vuelve al flujo incremental normal; el snapshot M27a solo se publica después de un siguiente incremental completo. Un backfill interrumpido no publica snapshot y se reanuda en el siguiente sync manual. No se elimina `coverage_until` ni se borra el dataset que consumen pantallas anteriores. Conexiones nuevas siguen el backfill inicial existente y no necesitan el indicador.
 
 RLS ENABLE + FORCE; SELECT authenticated solo por private.is_company_member(company_id), conexión Tiendanube activa, misma generación y sin snapshot invalidado. REVOKE ALL a public/anon/authenticated/service_role/praxa_integrations; luego solo SELECT authenticated. Ningún grant de escritura para usuarios o acceso directo para rol acotado. La conexión/política resuelve membresía bajo RLS; no acepta company_id del cliente.
 
@@ -100,70 +387,92 @@ Nueva `public.get_tn_customer_insights(p_connection_id uuid, p_currency text)` �
 Nuevos helpers `private.tn_refresh_customer_insights(p_connection_id uuid)` y `private.tn_invalidate_customer_insights(p_connection_id uuid)`: sin grants a roles runtime, llamados desde operaciones privilegiadas ya autorizadas. INVOKER por defecto; no helper DEFINER accesible a authenticated. Refresh identifica empresa/proveedor/generación desde la conexión bloqueada; no recibe datos ni tenant del navegador. El único contexto de ejecución es la transacción de sincronización verificada con actor/empresa/run/lease. No expone personas al servidor Node ni devuelve filas de clientes.
 
 La migración nueva reemplaza con mismas firmas/grants:
-- `worker_api.tn_start_sync(uuid,uuid,uuid,integer,uuid,uuid,timestamptz)`: invalida snapshot al empezar, en la misma transacción, después de validar ownership. No sirve un snapshot con entradas reemplazadas parcialmente.
-- `worker_api.tn_publish_orders(uuid,uuid,uuid,integer,uuid,uuid,jsonb,jsonb,jsonb)`: invalida antes de modificar pedidos, por defensa también ante llamadas a publicaciones con snapshot viejo. Guarda calidad monetaria cerrada en columnas nuevas privadas del pedido, no JSON bruto.
-- `worker_api.tn_finish_sync(uuid,uuid,uuid,integer,uuid,uuid,timestamptz,boolean)`: tras finalizar incremental completo y cobertura válida, construye snapshot en la misma transacción; backfill/incomplete no publica listo. Error de cálculo revierte esa transacción y no publica falso completo.
-- Trigger nuevo de INSERT en `private.tn_redaction_suppressions`: invalida agregados de conexiones afectadas en esa misma transacción. También al UPDATE de estado/generación/zona/moneda en integration_connections: invalida sin cambiar lifecycle ni grants existentes.
+- `worker_api.tn_start_sync(uuid,uuid,uuid,integer,uuid,uuid,timestamptz)`: invalida snapshot al empezar, en la misma transacción, después de validar ownership. No sirve un snapshot con entradas reemplazadas parcialmente. Si `insights_rebuild_pending=true`, crea un run de fase `backfill` sin cambiar la aridad; en la primera ejecución establece watermark/checkpoint para releer desde `historyStart`, y ante un run incompleto lo reanuda desde `backfill_next`.
+- `worker_api.tn_publish_orders(uuid,uuid,uuid,integer,uuid,uuid,jsonb,jsonb,jsonb)`: invalida antes de modificar pedidos, por defensa también ante llamadas a publicaciones con snapshot viejo. Guarda calidad monetaria, de identidad y de líneas en columnas privadas nuevas del pedido, no JSON bruto.
+- `worker_api.tn_publish_catalog` conserva su firma/grants y su tercer argumento booleano; el JSON `p_state` añade solo `new_traversal` y `has_omitted_products` booleanos. La nueva migración conserva el estado de omisiones entre páginas y fija `insights_catalog_status` en `complete`/`omitted_items` al terminar, o `cycle_incomplete` si el recorrido se interrumpe. `worker-api.ts` y sus casts no cambian.
+- `worker_api.tn_finish_sync(uuid,uuid,uuid,integer,uuid,uuid,timestamptz,boolean)`: tras finalizar incremental completo y cobertura válida, construye snapshot en la misma transacción; backfill/incomplete no publica listo. Al completar backfill de rebuild limpia `insights_rebuild_pending/started`; el snapshot espera el siguiente incremental completo. Error de cálculo revierte esa transacción y no publica falso completo.
+- Trigger nuevo de INSERT en `private.tn_redaction_suppressions`: invalida agregados de conexiones afectadas en esa misma transacción. También al UPDATE de estado/generación/zona/moneda en integration_connections: invalida sin cambiar lifecycle ni grants existentes; al cambiar generación o zona marca `insights_rebuild_pending` para una relectura completa en el siguiente sync manual.
 - En borrado de pedidos/líneas/cliente, invalidación por conexión; no reconstruir resultados mientras queden supresiones sin procesar. Recalcular en próximo incremental completo. Purga/store_redact no pueden dejar payload; eliminarlo desde las funciones de purga y privacy mediante reemplazos con mismas firmas, antes de terminar cada borrado de conexión. Cascade cubre borrar empresa/conexión.
-- Los callbacks y APIs externas no cambian. Si no se necesita alterar aridades, worker-api.ts/repository.ts se mantienen. Cualquier aridad nueva debe quedar autorizada y cubierta por contrato antes de usarla; el diseño recomendado no requiere ninguna.
+- Los callbacks y APIs externas no cambian. `worker-api.ts` queda intacto: `tn_publish_orders` conserva sus nueve argumentos y sus casts actuales. Sí cambian la forma interna de cada elemento del segundo JSONB (`orders`) y su contrato TypeScript, no la aridad RPC:
+  - `projection.ts` extiende `ProjectedOrder` con los tres campos monetarios de §3 y con `insights_identity_status` e `insights_lines_status`, usando los estados y reglas de procedencia definidos arriba; ninguna clave nueva contiene payload o PII;
+  - `sync.ts` obtiene los campos monetarios del parser estricto y, mientras T-04 no seleccione A o B, publica siempre `null`, `unverified`, `null`; también persiste los estados de identidad/líneas y la omisión de productos por página;
+  - `repository.ts` modifica el contrato de entrada de `publishOrders` para validar estrictamente esos cinco campos antes de `JSON.stringify`; sigue enviando `window`, `orders` y `lines` en los tres JSONB existentes, y valida el JSON de `publishCatalog` con los dos booleanos adicionales;
+  - la nueva migración reemplaza `worker_api.tn_publish_orders` con la misma firma/grants y revalida las cinco claves nuevas de cada pedido antes de guardarlas en columnas privadas; reemplaza el cuerpo de `tn_publish_catalog` con la misma firma/grants para validar su estado de recorrido.
+  No se agrega función a la allowlist ni se modifica `SQL_CASTS`. Una necesidad de cambiar nombre, cantidad u orden de argumentos exige parar y enmendar la spec antes de usarla.
 
 Filtrar pedidos suprimidos incluso antes de su borrado efectivo. Lectura en un snapshot PostgreSQL coherente; publicaciones y privacidad usan los bloqueos existentes por empresa/conexión. La invalidación se confirma con la supresión. Una página ya entregada no es revocable: siguiente lectura no devuelve el dato; sin caché compartida ni persistencia de DTO en navegador, logs o analítica.
 
-Refresh tiene presupuesto igual o inferior al timeout de 15 s del cliente existente y debe medirse con 10.000 pedidos/2.000 IDs sintéticos y 24 meses. Si no cabe o hace falta dividir trabajos/crear worker, parar y elevar Q-01; no aumentar timeout ni degradar exactitud silenciosamente. No mantener snapshot anterior tras invalidación para ocultar un fallo.
+Refresh tiene presupuesto igual o inferior al timeout de 15 s del cliente existente y debe medirse con 10.000 pedidos/2.000 IDs sintéticos y 24 meses. Si no cabe o hace falta dividir trabajos/crear worker, parar y reabrir Q-01; no aumentar timeout ni degradar exactitud silenciosamente. No mantener snapshot anterior tras invalidación para ocultar un fallo.
 
-### 3. Monetary: investigación y validación obligatoria (Q-02)
+### 3. Monetary: investigación y validación obligatoria (D-M27a-02 y D-M27a-09)
 
-La [documentación oficial de Order](https://tiendanube.github.io/api-documentation/resources/order) distingue precio total e importe pagado; describe cambios liquidados con signo en el historial de ediciones. **No acredita** que ese historial incluya el pago original ni que la suma del historial sea saldo final. Por tanto no basta sumar diferencias ni restarlas automáticamente al importe pagado. La fórmula queda abierta, no un fallback de implementación.
+La [documentación oficial de Order](https://tiendanube.github.io/api-documentation/resources/order) distingue precio total e importe pagado; describe cambios liquidados con signo en el historial de ediciones. **No acredita** que ese historial incluya el pago original ni que la suma del historial sea saldo final. Por tanto no basta sumar diferencias ni restarlas automáticamente al importe pagado. La elección empírica queda diferida a T-04 dentro de la implementación, bajo el contrato cerrado de esta sección; no existe fallback.
 
-Candidatas a conciliar: A, importe pagado vigente directamente si la API ya descuenta devoluciones; B, base pagada menos devolución verificada si la API conserva base bruta. Ninguna autorizada hasta evidencia de pago/edición/devolución y contrato oficial. Si ninguna sirve, no se publica M y se consulta al usuario sin cerrar el gate. No usar total del pedido.
+Contrato de decisión y parada aprobado en D-M27a-02:
 
-Validación previa con tienda de prueba autorizada, pedidos sintéticos preparados por el usuario y lecturas de PRAXA solamente. Casos: pago normal; parcial a pagado; devolución parcial y total; cancelación antes/después de pagar; edición al alza con saldo pendiente y pagado, a la baja, varias ediciones y devolución; pedido sin historial, historial malformado/incompleto, nulo, lectura interrumpida, presupuesto agotado, duplicados/reintentos; moneda y precisión. Comparar monto esperado conocido de cada operación sintética, forma exacta de respuesta y saldo según proveedor. Registrar evidencia redactada sin cuerpos, IDs ni valores reales. Los fixtures simulados prueban el motor, no validan semántica externa.
+- **A — `tn_paid_current_observed_v1`**, fórmula `insights_amount = total_paid_by_customer`, rótulo «importe pagado vigente observado»; solo si T-04 demuestra que la API ya descuenta devoluciones.
+- **B — `tn_paid_current_less_verified_refunds_v1`**, fórmula `insights_amount = total_paid_by_customer - verified_refund_sum`, rótulo «importe pagado observado menos devoluciones verificadas»; solo si T-04 demuestra que la API conserva una base bruta y permite descontar sin duplicaciones. Un resultado negativo o una devolución mayor que la base es `inconsistent`, nunca se recorta a cero.
+- **C — sin definición monetaria**, obligatoria si la evidencia es ambigua, insuficiente o inconsistente. No se publica M, el gate queda bloqueado y se revisa el alcance sin dividir M27a.
+
+A y B no están habilitadas ni acreditadas antes de T-04. No usar total del pedido.
+
+El transporte actual decodifica el cuerpo con `JSON.parse`: los tokens numéricos JSON llegan a la proyección como `number` y sus dígitos originales ya no se pueden recuperar. Para M27a, `total_paid_by_customer` solo es exacto si llega como string JSON decimal no negativo que cumpla `^[0-9]{1,15}(?:\.[0-9]{1,6})?$`; los `total_paid_diff` de entradas `PAID` usados por B solo son exactos si llegan como strings JSON con signo opcional y la misma precisión. Se permite espacio exterior, que se elimina antes de validar; no se aceptan exponentes, separadores ni conversiones desde `number`. Cualquier token numérico, string malformado, campo requerido ausente o diferencia relevante no validable da `insights_amount=null`, estado `incomplete` y bloquea M para el universo/moneda. No convertir a texto con `String`, `toFixed` ni reutilizar el monto normalizado de `ProjectedOrder` o `refundedFromHistory`; la extracción exacta de M27a usa los valores del objeto JSON decodificado y no altera los campos heredados de consumidores anteriores. La lógica nueva de historial distingue una diferencia inválida de una ausencia de reembolso: no la omite ni la interpreta como cero.
+
+T-04 se ejecuta durante la implementación con tienda de prueba autorizada, pedidos sintéticos preparados por el usuario y lecturas de PRAXA solamente. Casos empíricos: pago normal; parcial a pagado; devolución parcial y total; cancelación antes/después de pagar; edición al alza con saldo pendiente y pagado, a la baja, varias ediciones y devolución; pedido sin historial; moneda y precisión. Comparar monto esperado conocido de cada operación sintética, forma y tipos JSON documentados de respuesta y saldo según proveedor. Si un importe necesario aparece como token numérico JSON en cualquier caso que sustente A o B, la evidencia no es concluyente y se selecciona C; no inferir exactitud a partir del `number` ya decodificado. Registrar evidencia redactada sin cuerpos, IDs ni montos reales. Historial malformado/incompleto o nulo, lectura interrumpida, presupuesto agotado, duplicados y reintentos se cubren con fixtures en T-05: prueban el cierre seguro del motor, no la semántica externa.
+
+El futuro plan debe poner T-04 en una etapa monetaria temprana, después de implementar el lector/parser estricto y antes de asignar a `M27A_MONETARY_DEFINITION` un valor distinto de `null`, publicar M, etiquetar `alto_valor` o generar propuestas dependientes de M. Esa etapa debe contener, sin valores secretos:
+
+1. **Entrada y permisos:** usuario owner de una empresa sintética; tienda de prueba administrada por el usuario; scopes exactos `read_orders`, `read_customers` y `read_products`; autorización expresa del destino no productivo. PRAXA solo hace GET. El usuario crea, paga, edita, reembolsa y cancela los pedidos sintéticos desde Tiendanube.
+2. **Entorno:** despliegue no productivo con callback OAuth autorizado y base desechable confirmada por las guardas; secretos cargados por el usuario fuera del chat; nunca el proyecto `app`. Si obtener ese entorno exige otra app, cambiar el callback de producción o ampliar permisos, el plan se detiene y pide autorización antes de actuar.
+3. **Herramientas:** preflight existente para forma/presencia de configuración; OAuth y sincronización de PRAXA; lector estricto implementado aún con definición nula; inspección administrativa del usuario en el desechable de los campos cerrados y sintéticos necesarios para la conciliación. No persistir payload bruto ni imprimir token, IDs o cuerpos.
+4. **Procedimiento:** preparar la matriz de casos; sincronizar después de cada transición; contrastar A y B contra el resultado sintético conocido; registrar por caso versión de API, forma/tipos observados y `A_coincide | B_coincide | inconsistente`, sin identificadores ni montos reales; desconectar, desinstalar y verificar purga al terminar.
+5. **Salida:** evidencia concluyente común a todos los casos habilita exactamente A o B y su código/rótulo versionados; cualquier mezcla, ausencia o contradicción produce C. Registrar el resultado en `meta_first/sesiones/M27a.md`, mantener consumidores anteriores deshabilitados y ejecutar de nuevo las pruebas monetarias. T-04 no se considera ejecutado por esta decisión documental.
 
 Columnas privadas previstas en tn_orders: `insights_amount numeric null`, `insights_amount_status text not null default 'unverified'`, `insights_amount_definition text null`. Estados `verified | unverified | incomplete | inconsistent`. Invariante: verified exige monto >=0 y versión validada; demás exigen monto nulo. Validar contra el estado y source_updated_at de ese pedido, sin reutilizar una verificación de versión anterior. Reintento no suma montos ni mantiene verified después de un cambio no reconciliado.
 
-Nueva constante server-only `M27A_MONETARY_DEFINITION` en customer-insights/monetary.ts comienza nula; valor versionado únicamente tras evidencia y decisión Q-02 incorporada/auditada. La disponibilidad efectiva exige definición aprobada, cada pedido elegible del universo con estado verified, cobertura y moneda coherentes; una constante activa sola no prueba calidad. Pedidos existentes comienzan unverified: relectura mediante sincronización completa autorizada, no actualización ciega. No descartar clientes con importes desconocidos para hacer pasar el control.
+Nueva constante server-only `M27A_MONETARY_DEFINITION` en customer-insights/monetary.ts comienza nula; solo puede tomar `tn_paid_current_observed_v1` o `tn_paid_current_less_verified_refunds_v1` después de evidencia concluyente de T-04 registrada. La disponibilidad efectiva exige esa evidencia, cada pedido elegible del universo con estado verified, cobertura y moneda coherentes; una constante activa sola no prueba calidad. Pedidos existentes comienzan unverified: relectura mediante sincronización completa autorizada, no actualización ciega. No descartar clientes con importes desconocidos para hacer pasar el control.
 
-Parser estricto para la respuesta documentada y decimales exactos, sin toFixed(2) del número de entrada ni descarte de entradas inválidas como si no existieran. Un fallo produce incomplete y bloquea M del universo/moneda; no afecta los consumidores antiguos ni sus métricas. En ausencia de M se muestra motivo y RF puede ser diagnóstico parcial, sin rótulo de alto valor ni propuestas dependientes de M.
+Parser estricto para los strings decimales aceptados arriba, con precisión exacta y sin pasar por `number`. Un token numérico JSON ya convertido por el transporte, una diferencia relevante inválida o un campo requerido ausente produce `incomplete`, nunca un importe aproximado ni un cero; bloquea M del universo/moneda y no afecta los consumidores antiguos ni sus métricas. En ausencia de M se muestra motivo y RF puede ser diagnóstico parcial, sin rótulo de alto valor ni propuestas dependientes de M.
 
-La fórmula y rótulo económico se fijan después de Q-02. Aun validado, M es valor monetario observado de pedidos elegibles, no ingreso contable, beneficio ni saldo bancario; excluye pedidos totalmente reembolsados/cancelados según elegibilidad heredada. No atribuye devoluciones a su fecha de caja: refleja estado vigente de pedidos agrupados por su fecha comercial.
+T-04 selecciona la fórmula y el rótulo condicionales ya aprobados; no crea una tercera alternativa. Aun validado, M es valor monetario observado de pedidos elegibles, no ingreso contable, beneficio ni saldo bancario; excluye pedidos totalmente reembolsados/cancelados según elegibilidad heredada. No atribuye devoluciones a su fecha de caja: refleja estado vigente de pedidos agrupados por su fecha comercial.
 
-### 4. Universo y RFM (propuesta Q-03/Q-04)
+### 4. Universo y RFM (D-M27a-03 y D-M27a-04)
 
-Recomendación: corte `C` = último día local completo acreditado por coverage_until. Ventana fija inclusiva `[C-364,C]`; universo = IDs opacos con al menos un pedido elegible dentro. Estado actual de pedidos al terminar la extracción; nunca afirmar reconstrucción de estado pasado a C. Sin corte histórico elegible a elección del navegador ni filtros libres. La primera compra para cohortes se busca en todo el histórico cubierto, no en la ventana RFM.
+Corte `C` = último día local completo acreditado por coverage_until. Ventana fija inclusiva `[C-364,C]`; universo = IDs opacos con al menos un pedido elegible dentro. Estado actual de pedidos al terminar la extracción; nunca afirmar reconstrucción de estado pasado a C. Sin corte histórico elegible a elección del navegador ni filtros libres. La primera compra para cohortes se busca en todo el histórico cubierto, no en la ventana RFM. La interfaz declara que la segmentación representa actividad dentro de esos 365 días y no la totalidad de la base histórica. El cálculo solo cuenta `customer_id` válidos; cualquier estado `absent`, `invalid` o `unverified` se refleja en `quality.identity` y no se convierte en cliente ni en importe cero.
 
 Por ID/conexión/moneda: R = C menos último local_day elegible, en días calendario; F = número de pedidos elegibles distintos; M = suma exacta de insights_amount verified en la ventana. Dos pedidos el mismo día cuentan dos; diferencias entre compras se resuelven como abajo. M puede ser cero verificado, nunca reemplaza ausencia. El mismo ID con compras en dos monedas se evalúa por moneda, sin sumarlo como dos personas en un total global.
 
-Propuesta determinística de scoring: R_score 5 para R≤30; 4 para 31–60; 3 para 61–90; 2 para 91–180; 1 para 181–364. F_score 1 para F=1; 2 para F=2; 3 para 3–4; 4 para 5–9; 5 para ≥10. M_score por cuartiles de valores monetarios distintos de los clientes del universo/moneda: score 1–4 usando cortes de percentil discreto 25/50/75; igualdad queda en intervalo inferior, salvo que todos tengan mismo M, caso score común 1. No romper empates por ID ni ordenar personas arbitrariamente. Alto valor relativo exige variedad de M y score 4; no inferir alto valor de universo homogéneo. Mostrar distribución de segmentos, no tabla de personas o combinaciones R/F/M.
+Scoring determinístico `rfm_v1`: R_score 5 para R≤30; 4 para 31–60; 3 para 61–90; 2 para 91–180; 1 para 181–364. F_score 1 para F=1; 2 para F=2; 3 para 3–4; 4 para 5–9; 5 para ≥10. M_score por cuartiles de valores monetarios distintos de los clientes del universo/moneda: score 1–4 usando cortes de percentil discreto 25/50/75; igualdad queda en intervalo inferior, salvo que todos tengan mismo M, caso score común 1. No romper empates por ID ni ordenar personas arbitrariamente. Alto valor relativo exige variedad de M y score 4; no inferir alto valor de universo homogéneo. Mostrar distribución de segmentos, no tabla de personas o combinaciones R/F/M. La regla no es configurable por empresa en esta versión.
 
-Partición exclusiva, prioridad descendente: inactivos R>180; riesgo 91≤R≤180; nuevos F=1 y R≤30; alto_valor R≤90, F≥2 y M_score=4 con variedad; frecuentes R≤90 y F≥3; potencial resto. Cada cliente tiene exactamente un segmento. Las etiquetas son reglas comerciales, no probabilidad predicha de abandono; la población fuera de 365 días no se llama inactiva de este análisis. Explicar esa exclusión. Q-03/Q-04 deben aprobar período y umbrales antes de considerarlos contrato.
+Partición exclusiva, evaluada en este orden y asignando la primera coincidencia: inactivos R>180; riesgo 91≤R≤180; nuevos F=1 y R≤30; alto_valor R≤90, F≥2 y M_score=4 con variedad; frecuentes R≤90 y F≥3; potencial resto. Cada cliente tiene exactamente un segmento. Las etiquetas son reglas comerciales relativas a la población analizada, no probabilidades predichas de abandono; la población fuera de 365 días no se llama inactiva de este análisis. Explicar esa exclusión.
 
 Cada segmento publica solo agregados divulgables: clientes distintos, pedidos, M, M/cliente y M/pedido, mediana de R y media de F; denominadores explícitos. No confundir mediana con promedio. No publicar ranking individual ni extremos monetarios personales.
 
-### 5. Cohortes y métricas (propuesta Q-05)
+### 5. Cohortes y métricas (D-M27a-05)
 
-Recomendación: últimas 24 cohortes mensuales observadas y offsets 0–12; meses completos para comparar. Primer pedido elegible actual de cada ID/moneda en histórico cubierto determina mes c. Se rotula siempre primera compra observada: backfill completo no garantiza compras previas a la plataforma ni fusiona identidades. Supresión o cancelación puede cambiar c; no reconstrucción histórica.
+Catálogo aprobado: últimas 24 cohortes mensuales observadas y offsets 0–12; meses completos para comparar. Primer pedido elegible actual de cada ID/moneda en histórico cubierto determina mes c. Se rotula siempre primera compra observada: backfill completo no garantiza compras previas a la plataforma ni fusiona identidades. Supresión o cancelación puede cambiar c; no reconstrucción histórica.
 
 Por cohorte c y offset n:
 - tamaño N_c: IDs distintos de la cohorte; activos A_c,n: IDs con ≥1 pedido elegible en ese mes; retención A/N. N=0 no genera porcentaje; n=0 es 100% solo si N visible.
 - recompra acumulada: IDs con ≥2 pedidos elegibles desde primera compra hasta cierre de c+n, dividido N_c. Incluye dos pedidos en mes inicial; no igualar esta medida a retención mensual.
 - valor observado de cohorte: suma de M validado de pedidos de esos IDs en el mes; ticket = valor/pedidos elegibles de la celda; valor acumulado/cliente = suma desde c hasta c+n / N_c. No llamar LTV.
 - tiempo entre compras: media de días calendario entre pedidos consecutivos elegibles de IDs que repiten, usando local_day y desempate técnico por external_order_id dentro de SQL. Dos pedidos el mismo día producen intervalo 0. Denominador = número de intervalos, no todos los clientes; indicador acompañado por número de compradores repetidores divulgable.
-- dinero separado por moneda; retención heredada de M16e se compara en fixture monomoneda y solo se reutiliza semánticamente. El getter actual no aporta economía, recompra ni intervalos y su cuadrícula termina en último mes con compras: construir cuadrícula explícita para meses transcurridos sin compras. Mes abierto o futuro = periodo_abierto; sin cobertura = sin_cobertura; no llenar con cero.
+- dinero separado por moneda; retención heredada de M16e se compara en fixture monomoneda y solo se reutiliza semánticamente. El getter actual no aporta economía, recompra ni intervalos y su cuadrícula termina en último mes con compras: construir cuadrícula explícita para meses transcurridos sin compras. Un mes futuro/abierto es `periodo_abierto`; un mes no cubierto es `sin_cobertura`; en un mes cubierto, todo conteo de contribuyentes 0–4 se suprime como `privacidad`, nunca se publica como cero. Por tanto el cero observado queda dentro del grupo protegido 0–4 y no se distingue de 1–4; sí se distingue de meses abiertos/no cubiertos sin inventar una métrica.
 - privacidad se aplica a contribuyentes de cada métrica, no solo tamaño de cohorte; si activos/compradores que aportan intervalos son pocos, ocultar también dinero, medias y tasas que los revelarían.
 
-Q-05 decidirá el catálogo definitivo entre estas métricas evaluadas. Las que no puedan validarse quedan indisponibles con explicación, sin reemplazo por una métrica distinta.
+Todas las métricas enumeradas forman el catálogo aprobado. Las que no puedan validarse quedan indisponibles con explicación, sin reemplazo, estimación ni métrica sustituta.
 
-### 6. Privacidad y límites de interacción (propuesta Q-06)
+### 6. Privacidad y límites de interacción (D-M27a-06)
 
-Se recomienda k=5 para cualquier grupo o contribuyentes de métrica visible. Mantener regla vigente de cohortes: tamaño <5 oculta fila; activos <5 oculta celda, incluidos ceros según contrato vigente. No reconstruir un conteo oculto usando tasa o monto.
+Se exige k=5 para cualquier grupo o contribuyentes de métrica visible. Mantener regla vigente de cohortes: tamaño <5 oculta fila; activos <5 oculta celda, incluidos ceros según contrato vigente. Un mes cubierto con cero activos y uno con 1–4 se codifican igual como `privacidad`; ninguno se presenta como cero ni se distingue entre sí. `sin_cobertura` y `periodo_abierto` siguen siendo estados diferentes. No reconstruir un conteo oculto usando tasa o monto.
 
 En segmentos exclusivos: si alguno contiene entre 1 y 4 IDs, ocultar **toda la distribución de esa moneda**, sus totales y métricas económicas, no solo esa fila. No publicar total exacto, porcentajes, gráficos con tamaño proporcional ni conteos de exclusiones que permitan restar. Si todos los segmentos no vacíos tienen ≥5, los vacíos pueden mostrar cero. Una etiqueta de grupo oculto no revela el conteo exacto.
 
 No filtros de período, producto, umbral, segmento cruzado ni selector de cortes históricos; la moneda se elige entre resultados independientes sin total conjunto. Propuestas referencian exactamente grupos ya divulgados; no publican nuevas intersecciones ni uniones con conteos calculados en cliente. Conteo total de clientes existentes solo si toda partición es divulgable y no permite inferir un grupo protegido.
 
-La cobertura de identidad se muestra como calificación `completa | incompleta | no_evaluable`; no exponer conteos/porcentajes pequeños de invitados o errores como vía de resta. Las pruebas deben intentar reconstrucción por totales, tasas, tooltips, JSON, varias propuestas y vistas de cohortes. k-anonimato no impide inferencias con conocimiento externo ni diferencias entre snapshots sucesivos; Q-06 solicita aceptación explícita de ese límite o una política distinta. No prometer anonimización irreversible ni privacidad diferencial.
+La cobertura de identidad se muestra como calificación `completa | incompleta | no_evaluable`; no exponer conteos/porcentajes pequeños de invitados o errores como vía de resta. Las pruebas deben intentar reconstrucción por totales, tasas, tooltips, JSON, varias propuestas y vistas de cohortes. k-anonimato no impide inferencias con conocimiento externo ni diferencias entre snapshots sucesivos; D-M27a-06 acepta expresamente ese límite residual. La interfaz explica la indisponibilidad por privacidad sin revelar tamaño ni existencia precisa de los grupos ocultos. No prometer anonimización irreversible ni privacidad diferencial.
 
-### 7. Propuestas y reglas (propuesta Q-07)
+### 7. Propuestas y reglas (D-M27a-07)
 
 Propuestas con texto fijo, nombre y objetivo claros; métricas refieren a definición/corte/segmento, no a cifras inventadas. Si no hay evidencia o privacidad, no producir recomendación accionable: mostrar razón de indisponibilidad, sin una audiencia vacía ficticia.
 
@@ -175,19 +484,19 @@ Propuestas con texto fijo, nombre y objetivo claros; métricas refieren a defini
 | reactivacion_inactivos_v1 | inactivos dentro de ventana; excluir otros | Misma evidencia y límites de ventana; no incluir clientes fuera de cobertura. |
 | exclusion_adquisicion_v1 | todos los IDs identificados con compra elegible en ventana; excluir sin ID | Evidencia de clientes existentes; sugerir considerarlos exclusión, sin lista ni capacidad de aplicarla desde PRAXA. |
 | similares_alto_valor_v1 | mismo grupo alto_valor; excluye otros | Proponerlo como posible semilla; PRAXA no valida requisitos, coincidencias o tamaño utilizable de Meta. |
-| venta_cruzada_v1 | grupo frecuente o alto_valor con evidencia válida de productos; sin lista individual | Recomendar revisar complementariedad observada, nunca inventar categorías ni afirmar intención. Caso específico definido abajo y Q-07. |
+| venta_cruzada_v1 | grupo frecuente o alto_valor con evidencia válida de productos; sin lista individual | Recomendar revisar complementariedad observada, nunca inventar categorías ni afirmar intención. Caso específico definido abajo y aprobado en D-M27a-07. |
 
-Venta cruzada, recomendación conservadora: seleccionar solo un par de productos no eliminados A/B con mayor número de compradores distintos de ambos, dentro del grupo divulgado frecuente o alto_valor; desempate por claves técnicas, sin exponerlas. Exigir ≥5 compradores distintos para co-compra y para A sin B dentro de ese segmento, y catálogo completo/líneas no omitidas. La selección objetivo sería quienes compraron A y no B; **no publicar cantidad de esa intersección** ni sus métricas; identifiedCustomers=null con absence privacidad. Presentar respaldo cualitativo «co-compra observada con muestra suficiente» y referencia al agregado de calidad, sin cifras de par que permitan restas. Si no hay par seguro, propuesta no disponible. Las claves y conteos de par solo se usan dentro del SQL antes de sanitizar; DTO puede incluir nombres de productos tratados como texto no confiable y sin IDs. Q-07 debe aprobar si este alcance conservador entrega valor o requiere otra definición (sin categorías nuevas ni exportación).
+Venta cruzada conservadora: seleccionar solo un par de productos no eliminados A/B con mayor número de compradores distintos de ambos, dentro del grupo divulgado frecuente o alto_valor; desempate por claves técnicas, sin exponerlas. Exigir ≥5 compradores distintos para co-compra y para A sin B dentro de ese segmento, y catálogo completo/líneas no omitidas. La selección objetivo sería quienes compraron A y no B; **no publicar cantidad de esa intersección** ni sus métricas; identifiedCustomers=null con absence privacidad. Presentar respaldo cualitativo «co-compra observada con muestra suficiente» y referencia al agregado de calidad, sin cifras de par que permitan restas. Si no hay par seguro, propuesta no disponible. Las claves y conteos de par solo se usan dentro del SQL antes de sanitizar; DTO puede incluir nombres de productos tratados como texto no confiable y sin IDs. No afirmar causalidad, complementariedad ni rentabilidad garantizada.
 
 Los nombres no permiten HTML ni instrucciones; escape normal de React. No llamadas a proveedores LLM ni a Meta. No métricas calculadas sobre personas externas al histórico; número identificado no es alcance publicitario.
 
-### 8. UI, errores y frescura (Q-08)
+### 8. UI, errores y frescura (D-M27a-08)
 
-Página Clientes: fuente, período y corte, frescura, cobertura/identidad; distribución RFM y economía válida; matriz y gráfico de evolución con tabla accesible equivalente; fichas de propuestas con toda su evidencia y limitaciones. Diseño reutiliza tokens y componentes, CSS local, responsive, sin biblioteca nueva. Barras/tasas sin ceros de relleno; valores ocultos sin tooltips o atributos que los reconstruyan. Solo moneda es selector; nunca aceptar company_id o connection_id por searchParams.
+Página Clientes: fuente, período y corte, frescura, cobertura/identidad; distribución RFM y economía válida; matriz y gráfico de evolución con tabla accesible equivalente; fichas de propuestas con toda su evidencia y limitaciones. La matriz de hasta 24 cohortes por 13 offsets debe facilitar lectura e interpretación en móvil y escritorio sin eliminar métricas válidas. Diseño reutiliza tokens y componentes, CSS local, responsive, sin biblioteca nueva. Barras/tasas sin ceros de relleno; valores ocultos sin tooltips o atributos que los reconstruyan. Solo moneda es selector; nunca aceptar company_id o connection_id por searchParams.
 
-Mensajes fijos: «Conectá Tiendanube para analizar tus clientes», «Completá la sincronización para obtener cobertura», «El componente monetario todavía no está validado», «No hay compras elegibles en el período», «No se muestran estos agregados para proteger grupos pequeños», «No pudimos cargar el análisis». Ofrecer enlace a Integraciones, sin disparar sincronización automática.
+Mensajes fijos: «Conectá Tiendanube para analizar tus clientes», «Completá la sincronización para obtener cobertura», «El análisis se está actualizando», «El componente monetario todavía no está validado», «No hay compras elegibles en el período», «No se muestran estos agregados para proteger grupos pequeños», «No pudimos cargar el análisis». Ofrecer enlace a Integraciones, sin disparar sincronización automática.
 
-Recomendación Q-08: advertir extracción >24 h y bloquear propuestas tras 7 días; RFM/cohortes visibles como observación al corte con advertencia, nunca como actuales. Sin caché compartida; ninguna respuesta con datos de otra sesión. No exponer error original SQL/HTTP, IDs, payloads o importes en logs. Con needs_reauth solo aviso/enlace, no nuevos perfiles disponibles. No se altera comportamiento de pantallas anteriores.
+Política aprobada D-M27a-08, medida como tiempo transcurrido desde fetchedAt: hasta 24 horas inclusive, sin advertencia; más de 24 horas y hasta 7 días inclusive, advertencia visible y propuestas disponibles; más de 7 días, propuestas bloqueadas. RFM/cohortes pueden seguir visibles como observación histórica al corte con advertencia, nunca como actuales. Con needs_reauth se bloquean propuestas y solo se muestra aviso/enlace. Esta política no anula la indisponibilidad e invalidación de D-M27a-01. Sin caché compartida; ninguna respuesta con datos de otra sesión. No exponer error original SQL/HTTP, IDs, payloads o importes en logs. No se altera comportamiento de pantallas anteriores.
 
 ## Archivos previstos
 
@@ -199,7 +508,7 @@ Solo la spec se crea durante esta expansión. Esta tabla autoriza implementació
 | src/app/(app)/app/clientes/page.tsx | Nuevo | Página protegida | II.14d, pantalla |
 | src/components/customer-insights/{clientes.tsx,clientes.module.css,cohort-matrix.tsx,cohort-evolution.tsx,audience-proposals.tsx} | Nuevos | Vista integrada y accesible | II.14d, componentes propios |
 | src/components/app/shell.tsx | Modificado | Entrada Clientes; icono existente | II.14d, navegación |
-| src/modules/integrations/tiendanube/{projection,sync,repository}.ts | Modificados si Q-02 exige campos de calidad; mismo contrato de consumidores previos | Extracción monetaria, calidad y publicación | II.14d, insumos monetarios |
+| src/modules/integrations/tiendanube/{projection,sync,repository}.ts | Modificados para lectura estricta, campos de calidad y publicación; misma aridad RPC y sin cambios para consumidores externos previos | Extracción monetaria, T-04, calidad y publicación | II.14d, insumos monetarios |
 | supabase/migrations/NNNN_customer_insights.sql | Nueva; NNNN se resuelve al planificar/implementar, no reservado | Snapshot, columnas privadas, helpers, invalidación y reemplazos con mismas firmas | II.14d, solo migraciones nuevas |
 | supabase/tests/21_customer_insights.test.sql | Nueva; revalidar prefijo libre junto con M16f | Cálculo, privilegios, RLS y borrado | II.14d, suite SQL nueva |
 | supabase/tests/{09_integration_privileges,10_demo_closure,18_tiendanube}.test.sql | Modificados | Matriz, cierre y compatibilidad | II.14d, regresiones SQL |
@@ -247,18 +556,18 @@ Los puntos de §18 no tienen IDs CA propios; se conservan referencias exactas po
 |---|---|---|
 | M27a-C-01 | Tenant/identidad se resuelven en servidor, entrada ajena no revela filas y roles no autorizados no leen/escriben. | §18.6 |
 | M27a-C-02 | R/F/M dan valores exactos del fixture y misma entrada/corte/reglas producen misma salida; umbrales y empates aprobados. | §18.1 |
-| M27a-C-03 | Universo, período, zona y moneda explícitos; invitados y múltiples IDs no se presentan como personas deduplicadas. | §18.1/5 |
-| M27a-C-04 | Fórmula Q-02 conciliada con tienda sintética; M nulo si falta validación/completitud; false global preservado. | §18.2/3 |
+| M27a-C-03 | Universo, período, zona y moneda explícitos; selector limitado a monedas con snapshot visible por RLS, default determinístico y cambio por `?currency=`; invitados y múltiples IDs no se presentan como personas deduplicadas. | §18.1/5; D-M27a-03 |
+| M27a-C-04 | T-04 selecciona A o B con conciliación concluyente en tienda sintética, o C ante cualquier ambigüedad; M nulo si falta validación/completitud y false global preservado. | §18.2/3; D-M27a-02/09 |
 | M27a-C-05 | Cancelaciones, parciales, devoluciones, ediciones, nulos y reintentos respetan elegibilidad sin doble descuento. | §18.3 |
-| M27a-C-06 | Cuadrícula distingue mes futuro/abierto, no cubierto y cero; retención/recompra tienen denominadores correctos. | §18.4 |
+| M27a-C-06 | Cuadrícula distingue mes futuro/abierto, no cubierto y celda protegida 0–4 (`privacidad`, incluido cero no visible); retención/recompra tienen denominadores correctos sin revelar el cero. | §18.4/6; D-M27a-05/06 |
 | M27a-C-07 | Economía, ticket, valor observado e intervalos son exactos solo con calidad/denominador; sin LTV predictivo. | §18.4 |
 | M27a-C-08 | Supresión primaria/secundaria alcanza SQL, tabla, DTO y UI, sin deducción por totales/propuestas/celdas. | §18.6 |
 | M27a-C-09 | Propuestas satisfacen contrato, evidencia del mismo corte y reglas cerradas; no prometen alcance o resultados. | §18.7 |
 | M27a-C-10 | Venta cruzada necesita catálogo/líneas y muestra suficiente; sin evidencia se abstiene. | §18.7 |
 | M27a-C-11 | Nada crea/exporta/sincroniza audiencias ni envía datos a Meta/LLM; consumidores previos no se amplían. | §18.8 |
-| M27a-C-12 | Publicación agregada atómica/idempotente; entradas parciales invalidan, errores no producen snapshot listo. | §18.1/3 |
+| M27a-C-12 | Publicación agregada atómica/idempotente; entradas parciales invalidan, errores no producen snapshot listo; filas previas se revalidan con backfill resumible sin borrar cobertura ni el dataset de M16e. | §18.1/3; D-M27a-01 |
 | M27a-C-13 | Privacy, desconexión, cambio de generación y purga impiden lecturas obsoletas y dejan sin derivados afectados. | §18.5 |
-| M27a-C-14 | UI protege sesión y muestra distribución, matriz/evolución y propuestas con ausencias, procedencia y accesibilidad. | §18.6 |
+| M27a-C-14 | UI protege sesión y muestra distribución, matriz/evolución y propuestas con ausencias, procedencia, moneda seleccionable, estados de recálculo y accesibilidad. | §18.6; D-M27a-01/03 |
 | M27a-C-15 | Sin caché entre tenants ni logs con contenido; frescura aprobada gobierna disponibilidad. | §18.3/6 |
 | M27a-C-16 | Tamaño sintético medido sin truncar ni exceder presupuesto; no degrada sincronización vigente. | II.14d, trampas |
 | M27a-C-17 | Rama/checkout, migraciones y desechable coordinados sin tocar M16f, package ni otros contratos. | §18.9; CB-03/04 |
@@ -272,20 +581,20 @@ Todos los importes, IDs, pedidos y escenarios son sintéticos. Las aserciones de
 |---|---|---|---|---|---|
 | M27a-T-01 | C-01 | pgTAP + app | npm run test:policies; npm run test:app | Empresa A/B y anon, conexión ajena, company_id manipulado, raw private y escritura directa: sin acceso; tablas/functions con grants mínimos. | Sí |
 | M27a-T-02 | C-02/03 | pgTAP | npm run test:policies | Fixture 20 IDs distintos y 60 pedidos escritos con expectativas manuales; repetir produce igualdad. Bordes R=30/31/60/61/90/91/180/181, F=1/2/3/4/5/9/10; empates M y todos iguales. | Sí |
-| M27a-T-03 | C-03/05 | pgTAP + unit | npm run test:policies; npm run test:unit | Medianoche en zona, paid_at nulo fallback created_at, cambio de día, pedido repetido, dos compras mismo día; dos monedas sin suma; ID nulo y dos IDs no fusionados. | Sí |
-| M27a-T-04 | C-04 | manual | Sin comando automatizado: tienda de prueba autorizada | Matriz de conciliación de §3 demuestra fórmula exacta y ausencia de doble descuento; registrar fuente/versión, no payload ni IDs. | No: valida hipótesis externa; obligatorio para M/gate |
-| M27a-T-05 | C-04/05 | unit + app | npm run test:unit; npm run test:app | Lecturas simuladas válidas/invalidas, historial ausente, presupuesto, decimales y cambios de versión: verified solo con prueba/forma completas, demás nulo; no reutilizar verificación obsoleta. | Sí |
+| M27a-T-03 | C-03/05 | pgTAP + unit | npm run test:policies; npm run test:unit | Medianoche en zona, paid_at nulo fallback created_at, cambio de día, pedido repetido, dos compras mismo día; dos monedas sin suma; ID ausente, inválido y no fusionado; monedas disponibles ordenadas, default a la primera y selección exacta por `?currency=`; parámetro repetido, malformado o no disponible da error genérico sin consultar otra moneda. | Sí |
+| M27a-T-04 | C-04 | manual durante implementación | Sin comando automatizado: procedimiento de §3 en tienda y entorno de prueba autorizados | Matriz concluyente selecciona A o B y demuestra ausencia de doble descuento; cualquier mezcla/ausencia selecciona C. Registrar fuente/versión y resultado por caso, no payload, IDs ni montos reales. | No: valida hipótesis externa; no ejecutado al aprobar la spec; obligatorio antes de M/gate |
+| M27a-T-05 | C-04/05 | unit + app | npm run test:unit; npm run test:app | Prueba unitaria desde el cuerpo JSON simulado por `createTiendanubeHttpClient.getJson` hasta el parser monetario: un token numérico de alta precisión llega como `number` y produce `incomplete`/`null`, mientras un string JSON decimal conserva exactamente sus dígitos; repetir para `total_paid_diff` de B. Lecturas válidas/invalidas, historial ausente, presupuesto, decimales y cambios de versión: verified solo con prueba/forma completas, demás nulo; no reutilizar verificación obsoleta. `ProjectedOrder` y el JSON de `tn_publish_orders` llevan exactamente los tres campos monetarios y los dos estados de calidad de §2; forma inválida o clave extra se rechaza sin cambiar la aridad RPC. | Sí |
 | M27a-T-06 | C-05/12 | pgTAP + app | npm run test:policies; npm run test:app | paid→partially_refunded→refunded/cancelled; edición pendiente/pagada; reintento de misma ventana: métricas esperadas, sin sumar dos veces ni conservar cliente fuera de universo. | Sí |
-| M27a-T-07 | C-06 | pgTAP | npm run test:policies | Cohorte n=10, activos 10/5 y mes posterior cubierto sin compras; recompra con dos pedidos en N0; mes futuro/abierto y sin cobertura tienen motivos distintos, no cero inventado. | Sí |
+| M27a-T-07 | C-06 | pgTAP | npm run test:policies | Cohorte n=10; para celdas cubiertas, activos 0/1/4 son `privacidad` sin valor visible, 5/6 pueden divulgarse; mes futuro/abierto y sin cobertura tienen motivos distintos. Recompra con dos pedidos en N0 y denominadores correctos; cero nunca se devuelve ni se distingue de 1–4. | Sí |
 | M27a-T-08 | C-07 | pgTAP | npm run test:policies | Sumas/ticket/valor acumulado e intervalos conocidos, día repetido=0, media sobre intervalos y moneda separada; denominador nulo/cero o monto desconocido abstiene; dinero no redondeado antes de sumar. | Sí |
 | M27a-T-09 | C-08 | pgTAP + app | npm run test:policies; npm run test:app | Grupos 0/1/4/5/6; celda chica oculta dinero/tasa; partición con una fila chica oculta distribución/totales; inspección JSON y getter impide resta. | Sí |
-| M27a-T-10 | C-08/09 | unit + component | npm run test:unit; npm run test:component | Conteos de propuestas son referencias a grupos divulgados; ni tooltip, aria-label, atributo, tabla o gráfico filtra valor oculto. | Sí |
+| M27a-T-10 | C-08/09 | unit + component | npm run test:unit; npm run test:component | Zod acepta las formas exactas de `InsightsData`/`AudienceProposal`/`CurrencySelection` de §1.1 y rechaza claves extra, campos faltantes, unidad/definición/ausencia incompatibles, `DefinitionCode` ajeno a la tercera columna, moneda no disponible, segmento/cohorte duplicado y referencia inexistente u oculta. Conteos de propuestas son referencias a grupos divulgados; ni tooltip, aria-label, atributo, tabla o gráfico filtra valor oculto. | Sí |
 | M27a-T-11 | C-09/11 | unit | npm run test:unit | Cada regla da todos los campos y evidencia; alto valor sin M/variedad no se recomienda; no conexión Meta requerida; cero llamadas externas. | Sí |
-| M27a-T-12 | C-10 | pgTAP + unit | npm run test:policies; npm run test:unit | Par seguro y desempate reproducible; líneas omitidas, catálogo incompleto/borrado o intersección pequeña: no propuesta; no conteo de intersección en DTO. | Sí |
-| M27a-T-13 | C-12/13 | app + pgTAP | npm run test:app; npm run test:policies | Snapshot viejo invalidado al start/publish, corte a mitad y fallo refresh no muestran listo; siguiente incremental completo reconstruye; rollback e idempotencia acreditados. | Sí |
+| M27a-T-12 | C-10 | pgTAP + unit | npm run test:policies; npm run test:unit | Procedencia conservada entre páginas: catálogo completo sin omisiones, omitido, interrumpido y estado inicial se distinguen; líneas completas, campo ausente/no-array, línea inválida/recortada y fila preexistente `unverified` dan la calidad esperada. Cruce seguro y desempate reproducible; cualquier calidad incompleta, catálogo borrado, enlace de producto no válido o intersección pequeña: no propuesta; no conteo de intersección en DTO. | Sí |
+| M27a-T-13 | C-12/13 | app + pgTAP | npm run test:app; npm run test:policies | Snapshot viejo invalidado al start/publish; backfill pendiente relee desde historyStart, conserva cursor ante corte, no elimina coverage_until ni el dataset M16e, y el backfill completo solo permite snapshot tras el siguiente incremental completo. Error refresh y publicación parcial no muestran listo; rollback e idempotencia acreditados. | Sí |
 | M27a-T-14 | C-13 | app + pgTAP | npm run test:app; npm run test:policies | customer/redact marcado y paso 2 fallido ya oculta; sync concurrente filtra supresión; store_redact, desconexión, generación, cambio de zona y borrar empresa no dejan payload visible/huérfano. | Sí |
-| M27a-T-15 | C-14/15 | component + unit | npm run test:component; npm run test:unit | Todos los estados y frescura; teclado/tabla accesible; sesión ausente; tenant de request no se conserva entre usuarios; error fijo sin cuerpo. | Sí |
-| M27a-T-16 | C-11/15 | unit + app | npm run test:unit; npm run test:app | Guardas de credenciales, spies de red y consumidores anteriores: global false, sin datos hacia LLM/Meta, sin endpoints de exportación; firmas antiguas siguen operativas. | Sí para frontera nueva; regresiones existentes deben conservar verde |
+| M27a-T-15 | C-14/15 | component + unit | npm run test:component; npm run test:unit | Las once variantes estrictas de `CustomerInsightsView` respetan las precondiciones de §1.1; todas llevan `availableCurrencies`/`selectedCurrency` y mensajes salen de `kind`, no del DTO. Frescura, selector de teclado accesible, sync en curso sin snapshot visible, sesión ausente, tenant de request no conservado entre usuarios y error fijo sin cuerpo. `unverified` mapea a `monetario_no_validado`; `incomplete/inconsistent` a `dato_incompleto`; definición faltante/incompatible produce error; no se colapsan estados. | Sí |
+| M27a-T-16 | C-11/15 | unit + app | npm run test:unit; npm run test:app | Guardas de credenciales, spies de red y consumidores anteriores: global false, sin datos hacia LLM/Meta, sin endpoints de exportación; `worker-api.ts` y los nueve casts de `tn_publish_orders` quedan idénticos, mientras `repository.ts` valida el JSON extendido; firmas antiguas siguen operativas. | Sí para frontera nueva; regresiones existentes deben conservar verde |
 | M27a-T-17 | C-16 | app | npm run test:app | 10.000 pedidos/2.000 IDs/24 meses, multiempresa; refresh y lectura bajo presupuesto, conteos exactos sin truncar; registrar duración real. | Sí |
 | M27a-T-18 | C-14 | manual | Recorrido autorizado de /app/clientes con datos sintéticos | Móvil/escritorio, fuente/corte/frescura, gráficos/tablas, propuestas sin acción externa y límites económicos honestos. | No: inspección visual posterior |
 | M27a-T-19 | C-17/18 | documental | git diff --check; git status --short; npm run db:check:test | Solo archivos autorizados, nueva numeración libre, destino desechable exclusivo, cambios ajenos intactos, acta y aprobaciones con evidencia. | No: control operativo |
@@ -303,9 +612,9 @@ Durante esta expansión solo se revisan documentos/código, fuentes oficiales y 
 
 | Momento | Acción del usuario | Verificación posterior |
 |---|---|---|
-| Grill | Resolver Q-01 a Q-08 sin reabrir restricciones ya aprobadas | Decisiones D-M27a-NN y secciones afectadas actualizadas; reauditar si cambian |
+| Grill | Q-01 a Q-08 resueltas; T-04 trasladado a implementación sin darlo por ejecutado | D-M27a-01 a D-M27a-09 y secciones afectadas actualizadas; preguntas abiertas vacías |
 | Spec/plan | Aprobar cada artefacto después de APROBABLE | Estados explícitos y hashes de contenido |
-| Validación monetaria | Autorizar tienda/entorno de prueba y preparar pagos/ediciones/devoluciones sintéticos; credenciales solo en configuración segura | T-04, conciliación sin datos reales ni secretos |
+| Etapa monetaria de implementación | Autorizar el destino no productivo y la tienda de prueba, configurar OAuth/secretos fuera del chat y preparar pagos/ediciones/devoluciones sintéticos | Precondiciones de §3 y del plan verificadas; luego T-04, conciliación sin datos reales ni secretos |
 | Uso real | Aprobar finalidad ampliada y comunicarla al dueño | Acta y evidencia de comunicación; sin aprobación no usar datos reales nuevos |
 | Migraciones | Ejecutar npm run db:push:test solo tras ensayo reversible y guarda del desechable | Historial, suites y matriz de privilegios; asistente no ejecuta push |
 | Publicación | Commit, push, PR, migraciones en app y despliegue cuando se soliciten expresamente | Orden/esquema y despliegue verificados; ninguna suite/fixture en app |
@@ -320,23 +629,31 @@ Durante esta expansión solo se revisan documentos/código, fuentes oficiales y 
 - La marca de privacidad debe invalidar antes del borrado; una lectura con SQL privilegiado podría saltarse RLS si no se evita por diseño.
 - Suppression en particiones y cohortes cruzadas requiere pruebas de deducción; k=5 no es garantía general frente a conocimiento externo o comparación temporal.
 - Snapshot agregado por moneda limita doble conteo e interacciones, pero el costo de recalcular no está medido. No introducir workers o cache compartida como salida silenciosa.
-- M16f modifica documentos, worker-api y suite remota; coordinar rama/checkout y no reservar números a priori. El snapshot es un diseño propuesto, no una autorización a interferir otra implementación.
+- M16f modifica documentos, worker-api y suite remota; coordinar rama/checkout y no reservar números a priori. El snapshot aprobado no autoriza interferir otra implementación.
 - Un gate de Tiendanube cerrado con excepciones no valida Monetary para esta funcionalidad.
 - Sin dos ciclos convergentes, con archivo fuera de alcance o contradicción de ruta: parar. No resolver ampliando alcance ni dividiendo la microfase.
 
 ## Decisiones de la microfase
 
-No hay decisiones materiales propias tomadas todavía. Las restricciones de alcance aprobadas pertenecen a §18 y se heredan, no se presentan como respuestas al grill. Las elecciones no materiales de esta expansión son nombres de módulos/DTO y uso de SQL numeric, patrones RLS y componentes existentes; se justifican arriba.
+Las restricciones de alcance aprobadas pertenecen a §18 y se heredan, no se presentan como respuestas al grill. Las elecciones no materiales de esta expansión son nombres de módulos/DTO y uso de SQL numeric, patrones RLS y componentes existentes; se justifican arriba.
 
 | ID | Decisión | Motivo | Decidió | Fecha |
 |---|---|---|---|---|
-| — | Pendiente del grill | No adjudicar decisiones al usuario | — | — |
+| D-M27a-01 | Snapshot agregado vigente por conexión/moneda, publicado al cerrar un incremental válido e indisponible durante sincronización, invalidación o recálculo; estado claro en UI. Presupuesto máximo 15 s con 10.000 pedidos, 2.000 IDs y 24 meses; si no se cumple, reabrir Q-01. | Menor costo de consulta, consistencia entre RFM/cohortes/propuestas y menor complejidad de auditoría; confiabilidad por encima de disponibilidad permanente. | Usuario | 2026-11-17 |
+| D-M27a-02 | Contrato cerrado A/B/C para Monetary: A=`tn_paid_current_observed_v1`; B=`tn_paid_current_less_verified_refunds_v1`; C=sin definición. T-04 selecciona obligatoriamente una salida por evidencia, nunca por preferencia. | Bloquear el gate antes que segmentar o recomendar con economía incorrecta; fórmulas y rótulos condicionales quedan definidos sin fingir validación. | Usuario | 2026-11-17 |
+| D-M27a-03 | Corte en último día local completo y ventana inclusiva fija de 365 días; sin filtros temporales. Clientes anteriores quedan fuera y la UI aclara que no representa toda la base histórica. | Cubre ciclo anual y estacionalidad, prioriza actividad reciente, limita procesamiento y estandariza validación. | Usuario | 2026-11-17 |
+| D-M27a-04 | `rfm_v1` adopta los umbrales, empates, cuartiles relativos, prioridad exclusiva y carácter no configurable de §4. Universo homogéneo no produce alto valor; etiquetas no son predicciones. | Clasificación reproducible, exclusiva y relativa a cada tienda/moneda, sin adjudicar alto valor arbitrario. | Usuario | 2026-11-17 |
+| D-M27a-05 | Catálogo completo de hasta 24 cohortes mensuales, offsets 0–12 y todas las métricas de §5; ausencia explícita sin sustitutos por cobertura, dinero o privacidad. | Retención, recompra y evolución económica aportan evidencia; cero debe distinguirse de indisponibilidad y primera compra es observada. | Usuario | 2026-11-17 |
+| D-M27a-06 | `k=5`, supresión de grupos/celdas pequeños y de toda la distribución por moneda si un segmento tiene 1–4; sin filtros o totales reconstructivos. Se aceptan límites residuales de inferencia. | Sacrificar disponibilidad antes que exponer información; no prometer anonimización completa. | Usuario | 2026-11-17 |
+| D-M27a-07 | Aprobar las siete reglas de §7, alcance conceptual, privacidad, venta cruzada sin cantidad de intersección y abstención obligatoria sin evidencia/divulgación. | La evidencia observada aporta valor aun sin tamaño exacto; no afirmar causalidad, complementariedad ni rentabilidad. | Usuario | 2026-11-17 |
+| D-M27a-08 | Frescura desde fetchedAt: ≤24 h sin advertencia; >24 h y ≤7 días con advertencia y propuestas; >7 días bloquea propuestas y conserva análisis histórico advertido. needs_reauth bloquea propuestas. | Diferenciar observación histórica de recomendación accionable sin anular publicación/invalidación de D-M27a-01. | Usuario | 2026-11-17 |
+| D-M27a-09 | Trasladar T-04 a la implementación. Monetary comienza y permanece indisponible hasta evidencia concluyente; el futuro plan debe incluir permisos, entorno no productivo, procedimiento, evidencia y limpieza de §3. T-04 no se considera ejecutado por esta enmienda y C bloquea el gate sin dividir M27a. | Evitar una dependencia circular previa a la aprobación manteniendo la validación empírica como requisito obligatorio de implementación y cierre. | Usuario | 2026-11-17 |
 
 ## Supuestos e hipótesis
 
 | ID | HIPÓTESIS | Cómo/cuándo se verifica |
 |---|---|---|
-| M27a-H-01 | Es posible definir un monto monetario observado fiable con los campos actuales y GET history/values autorizado. | T-04 antes de aprobar fórmula; si falla, Q-02 y gate bloqueados. |
+| M27a-H-01 | Es posible definir un monto monetario observado fiable con los campos actuales y GET history/values autorizado. | T-04 durante implementación y antes de habilitar M; si no acredita A o B, rige C y el gate queda bloqueado. |
 | M27a-H-02 | La tienda de prueba permite simular todos los estados requeridos sin datos reales. | Usuario confirma entorno y casos antes de T-04; falta bloquea validación, no se hereda tienda real del dueño. |
 | M27a-H-03 | El refresh agregado cabe bajo 15 s con volumen propuesto. | T-17 en desechable; no cambiar timeout ni truncar como sustituto. |
 | M27a-H-04 | Los períodos registrados permiten llamar al primer pedido «observado» con corte completo. | Fixture de backfill/incremental y T-03/07; nunca asegurar primera compra vitalicia. |
@@ -345,27 +662,14 @@ No hay decisiones materiales propias tomadas todavía. Las restricciones de alca
 
 ## Preguntas abiertas
 
-Son decisiones materiales. Las recomendaciones detalladas en Diseño concreto son candidatas, no aprobaciones implícitas. El grill no habilita API writes, PII, LLM, varias microfases ni activar montos globalmente.
-
-| ID | Pregunta | Opciones | Recomendación | Evidencia |
-|---|---|---|---|---|
-| M27a-Q-01 | ¿Aprobar un snapshot agregado por conexión/moneda y su indisponibilidad durante sincronización/invalidación? | A: snapshot RLS publicado al cerrar incremental; B: cálculo por lectura con nuevo helper privado acotado, a diseñar/auditar y medir | A, §2: sin perfiles nuevos ni lecturas privadas al runtime; medir costo antes de cierre | 0023:522/578/2042; ARCHITECTURE:146; ruta II.14d |
-| M27a-Q-02 | ¿Qué definición/rótulo monetario se aprobará tras conciliar el comportamiento de la API? | A: monto pagado vigente si se prueba ya ajustado; B: base menos devoluciones solo si se prueba base bruta; C: ninguna verificable, bloquear y revisar alcance | No elegir fórmula sin T-04; validar A/B y aprobar exactamente una con versión. Monetary sigue obligatorio, no sustituirlo por RF o total | H-E1-270; projection.ts:240; documentación oficial; §3 |
-| M27a-Q-03 | ¿Ventana RFM fija de 365 días y corte último día local completamente cubierto? | A: propuesta de §4; B: otra ventana fija explícita que se debe definir | A; universo y exclusión de clientes más antiguos visibles; sin corte histórico arbitrario | §18.1/3/5; 0023:629 |
-| M27a-Q-04 | ¿Aprobar scoring y partición comercial propuesta? | A: umbrales R/F, cuartiles M y prioridad de §4; B: otros umbrales/segmentos con definición completa | A como regla comercial revisable/versionada; no predictor de abandono; empates no se rompen por persona | §18.1; objetivo #18 |
-| M27a-Q-05 | ¿Aprobar catálogo y límites de cohortes evaluados? | A: 24 cohortes, offsets 0–12 y métricas definidas en §5 sujetas a validez; B: catálogo menor explícito | A, con estados no disponible por cobertura/dinero y valor observado, sin LTV | §18.4; getter 0023:2604 |
-| M27a-Q-06 | ¿Aprobar k=5, ocultamiento secundario conservador y límites declarados de inferencia? | A: política de §6 sin filtros libres, ocultar partición si hay grupo 1–4 y aceptar límites de conocimiento externo/snapshots sucesivos; B: otra política a especificar y auditar | A, conservadora y verificable; no prometer anonimización ni privacidad diferencial | §18.6; M16e-C-13; §6 |
-| M27a-Q-07 | ¿Aprobar las reglas publicitarias y venta cruzada conservadora sin cantidad de intersección? | A: reglas de §7; B: ajustar selección/valor comercial dentro de evidencia disponible | A; no identificar personas ni inventar categorías. Sin evidencia, abstenerse | §18.7; líneas 0023:308; objetivos #32 |
-| M27a-Q-08 | ¿Aprobar advertencia a 24 h y bloqueo de propuestas tras 7 días de antigüedad? | A: §8; B: otro plazo explícito de frescura | A como política de producto a aprobar, no límite de la API | §18.3/6/7; coverage_until y last_fetched_at de 0023:399 |
-
-Q-02 exige investigación/validación experimental: no puede responderse por preferencia del usuario ni marcarse cerrada sin evidencia. Si la validación solo puede ocurrir después del plan, acordar en el grill un contrato de indisponibilidad y parada, sin autorizar una fórmula no validada; una spec con fórmula pendiente no es implementable como RFM completo ni aprobable para habilitar montos. Volver a auditar texto y hash después de incorporar evidencia/decisiones.
+Ninguna. Q-01 a Q-08 quedaron cerradas por D-M27a-01 a D-M27a-09. Cerrar Q-02 aprueba el contrato condicional y la secuencia de validación, no acredita A, B ni la ejecución de T-04. El grill no habilita API writes, PII, LLM, varias microfases ni montos globales.
 
 ## Hallazgos relacionados
 
-`H-E1-270`, abierto y asignado a M27a: validación monetaria insuficiente. `M16e-H-06`, hipótesis previa no verificada. Los riesgos nuevos de esta expansión quedan en esta spec/preguntas; la skill solo permite escribir este archivo, por lo que no se edita HALLAZGOS. Si una auditoría confirma un defecto nuevo, asignará ID estable en el paso autorizado correspondiente.
+`H-E1-270`, abierto y asignado a M27a: validación monetaria insuficiente; se resuelve únicamente con T-04 durante la implementación, no con esta enmienda. `M16e-H-06`, hipótesis previa no verificada. Los riesgos nuevos de esta expansión quedan en esta spec; la skill solo permite escribir este archivo, por lo que no se edita HALLAZGOS. Si una auditoría confirma un defecto nuevo, asignará ID estable en el paso autorizado correspondiente.
 
-No se detectó dependencia de entrada sin cerrar. Hay bloqueos para aprobación/implementación: decisiones materiales pendientes, fórmula/entorno monetario aún no validados y coordinación operativa futura. No hay autorización para reducir Monetary ni cambiar la ruta de otras microfases.
+No se detectó dependencia de entrada sin cerrar. T-04 y su entorno son una precondición asignada dentro de la implementación, no un resultado acreditado ni un bloqueo para auditar la spec; sí bloquean habilitar M y cerrar el gate. También queda coordinación operativa futura. No hay autorización para reducir Monetary ni cambiar la ruta de otras microfases.
 
 ## Auditorías
 
-Sin auditorías realizadas para esta spec. No existe aún `revisiones/spec-audit-N.md` de M27a. Siguiente paso oficial: `/grill-me` sobre esta spec; luego `/spec-auditor M27a` cuando corresponda. No se genera el plan ni se inicia implementación.
+`revisiones/spec-audit-1.md` a `revisiones/spec-audit-5.md` emitieron **REQUIERE CAMBIOS**; la ronda 4 encontró A-10 y la ronda 5 confirmó que una cita aún no estaba corregida. Esta versión incorpora las correcciones técnicas A-01 a A-10, mantiene las decisiones aprobadas D-M27a-01 a D-M27a-09 y no amplía ni divide M27a. La sexta auditoría independiente debe emitir `revisiones/spec-audit-6.md` sobre el hash actual; hasta que sea APROBABLE no se aprueba la spec ni se genera el plan.
