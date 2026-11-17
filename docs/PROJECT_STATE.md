@@ -10,8 +10,7 @@ La segunda enmienda M26b, aprobada el 2026-11-16, sustituye M26b.1/M26b.2 por un
 microfase M26b, con excepción al límite de ocho horas, una spec y un plan. Conserva
 `G-STRATEGY-ENGINE` como checkpoint interno y `G-STRATEGIES` como único gate final. La spec
 unificada fue aprobada expresamente por el usuario el 2026-11-16 tras `spec-audit-3.md`. El
-plan único fue aprobado expresamente por el usuario el 2026-11-16 tras `plan-audit-2.md`. No hay
-implementación ni gates cerrados.
+plan único fue aprobado expresamente por el usuario el 2026-11-16 tras `plan-audit-2.md`. La implementación de M26b está en curso. No hay gates de M26b cerrados.
 
 ## Cerradas
 
@@ -37,7 +36,7 @@ implementación ni gates cerrados.
 
 **M16f — GA4: habilitada por `G-TIENDA` (2026-11-15).** Necesita spec y plan aprobados antes del código.
 
-**M26b — Estrategias publicitarias verificables: BLOQUEADA en el paso remoto desde 2026-11-16.** Habilitada por `G-DIAG` y por las dos enmiendas M26b; el código M25b requerido está integrado en `main` y la spec y el plan únicos están aprobados. Falta preparar localmente la configuración del proyecto de pruebas desechable antes de verificar el motor/adaptador.
+**M26b — Estrategias publicitarias verificables: BLOQUEADA en el paso 5 del plan de implementación desde 2026-11-16.** Habilitada por `G-DIAG` y por las dos enmiendas M26b; el código M25b requerido está integrado en `main` y la spec y el plan únicos están aprobados. Falta completar la configuración del proyecto de pruebas desechable.
 
 `G-TIENDA` habilita `M16f`; `G-DIAG` habilita M26b. Son trabajos paralelos de planificación, pero cada asistente ejecuta una sola microfase por vez y solo a pedido del usuario. `G-STRATEGY-ENGINE` es un checkpoint interno de M26b, no cierra la microfase ni habilita una sucesora. `G-ANOMALIES` solo se requiere para el gate final `G-STRATEGIES`. `M28.3a` espera `G-CHAT`, `G-ANOMALIES`, `G-DIAG`, `G-TIENDA`, `G-GA4-FUSION` y `G-STRATEGIES`.
 
@@ -59,11 +58,13 @@ no tiene sus variables. Integración de código no equivale a gate aprobado y no
 `G-STRATEGIES`. Evidencia en
 [sesiones/M25b.md](FASES/FASE1/M25b/sesiones/M25b.md).
 
-**M26b — BLOQUEADA; MOTOR/ADAPTADOR SIN VERIFICACIÓN REMOTA.** La spec y el plan únicos están
-aprobados. La evidencia de ejecución se registra en
-[M26b/sesiones/M26b.md](FASES/FASE1/M26b/sesiones/M26b.md). Falta configurar el proyecto de
-pruebas desechable. `G-STRATEGY-ENGINE` permanece abierto; `G-ANOMALIES` sigue pendiente y
-bloquea únicamente el gate final `G-STRATEGIES`.
+**M26b — BLOQUEADA EN EL PASO 5 DEL PLAN.** La spec y el plan únicos están aprobados. El motor determinístico y el adaptador están implementados. Falta ejecutar las pruebas de integración con Supabase, aprobar el checkpoint `G-STRATEGY-ENGINE`, implementar la UI/demo y realizar las revisiones finales.
+
+Para continuar, completar la configuración del entorno de pruebas y ejecutar `/microfase M26b`.
+
+Evidencia en [M26b/sesiones/M26b.md](FASES/FASE1/M26b/sesiones/M26b.md).
+
+`G-ANOMALIES` sigue pendiente y bloquea únicamente el gate final `G-STRATEGIES`.
 
 ## Fuera de la ruta o pospuesto
 
