@@ -139,7 +139,7 @@ export type PreparedDiagnostic =
 
 const RAW_METRICS = new Set<Metric>(['spend', 'impressions', 'clicks', 'link_clicks', 'result_count', 'result_value']);
 
-function compatibleAttribution(a: string, b: string): boolean {
+export function compatibleAttribution(a: string, b: string): boolean {
   if (a === 'mixed' || b === 'mixed') return false;
   return !(a.startsWith('attr_') && b.startsWith('attr_') && a !== b);
 }

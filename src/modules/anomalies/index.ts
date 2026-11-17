@@ -14,3 +14,7 @@ export type {
 } from './contract';
 export { detectMetaAnomalies } from './detect';
 export { createMetaAnomalyDemo } from './demo';
+export type {
+  MetaAnomalyLoadDeps,
+  ResolvedMetaAnomalyInput,
+} from './load';

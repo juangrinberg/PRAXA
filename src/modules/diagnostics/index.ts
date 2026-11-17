@@ -5,6 +5,7 @@ export {
   DiagnosticPreparationError,
   estimateTokens,
   attachStoreSection,
+  compatibleAttribution,
   isLowSample,
   prepareDiagnostic,
   prepareStoreSection,
@@ -15,6 +16,7 @@ export {
   type PreparedStoreSection,
   type StoreSalesRead,
 } from './evidence';
+export { readDiagnosticSettings, supabaseRpc } from './eligibility';
 export {
   DiagnosticReadError,
   DiagnosticWriteError,

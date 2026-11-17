@@ -4,7 +4,7 @@ import { readMetaDailyCoverage, readMetaSyncStatus, type MetaCoverageRow, type M
 import { readConnectionRecord } from '@/modules/integrations/repository/connections';
 import { requireTenantContext, type TenantContext } from '@/modules/tenant/context';
 
-import type { MetaAnomalyObservation, MetaAnomalyView } from './contract';
+import type { MetaAnomalyObservation, MetaAnomalyResult, MetaAnomalyView } from './contract';
 import { createMetaAnomalyDemo } from './demo';
 import { detectMetaAnomalies } from './detect';
 
@@ -30,6 +30,12 @@ const defaultDeps: MetaAnomalyLoadDeps = {
   readCoverage: readMetaDailyCoverage,
   now: () => new Date(),
 };
+
+export type ResolvedMetaAnomalyInput = Readonly<{
+  connectionId: string;
+  summary: NonNullable<MetaSyncStatus['summary']>;
+  generatedAt: string;
+}>;
 
 function shortHash(text: string): string {
   let hash = 0x811c9dc5;
@@ -73,6 +79,20 @@ function toObservation(row: MetaCoverageRow): MetaAnomalyObservation | null {
   };
 }
 
+export async function loadMetaAnomalyResultForResolvedSync(
+  input: ResolvedMetaAnomalyInput,
+  injected: Pick<MetaAnomalyLoadDeps, 'readCoverage'> = { readCoverage: defaultDeps.readCoverage },
+): Promise<MetaAnomalyResult> {
+  const accountPromise = injected.readCoverage({ connectionId: input.connectionId, level: 'account',
+    from: input.summary.window_from, to: input.summary.window_to });
+  const campaignPromise = input.summary.levels.campaign.status === 'complete' ?
+    injected.readCoverage({ connectionId: input.connectionId, level: 'campaign',
+      from: input.summary.window_from, to: input.summary.window_to }) : Promise.resolve([]);
+  const rows = (await Promise.all([accountPromise, campaignPromise])).flat();
+  const observations = rows.map(toObservation).filter((item): item is MetaAnomalyObservation => item !== null);
+  return detectMetaAnomalies({ mode: 'real', generatedAt: input.generatedAt, observations });
+}
+
 export async function loadMetaAnomalyView(
   options: Readonly<{ mode: 'real' | 'synthetic_demo' }>,
   injected: Partial<MetaAnomalyLoadDeps> = {},
@@ -98,18 +118,8 @@ export async function loadMetaAnomalyView(
       return { state: 'insufficient_data', result, lastSyncedAt };
     }
 
-    const accountPromise = deps.readCoverage({ connectionId: connection.id, level: 'account',
-      from: summary.window_from, to: summary.window_to });
-    const campaignPromise = summary.levels.campaign.status === 'complete' ?
-      deps.readCoverage({ connectionId: connection.id, level: 'campaign',
-        from: summary.window_from, to: summary.window_to }) : Promise.resolve([]);
-    const rows = (await Promise.all([accountPromise, campaignPromise])).flat();
-    const observations = rows.map(toObservation).filter((item): item is MetaAnomalyObservation => item !== null);
-    const result = detectMetaAnomalies({
-      mode: 'real',
-      generatedAt: deps.now().toISOString(),
-      observations,
-    });
+    const result = await loadMetaAnomalyResultForResolvedSync({ connectionId: connection.id, summary,
+      generatedAt: deps.now().toISOString() }, { readCoverage: deps.readCoverage });
     return result.status === 'ready' ? { state: 'ready', result, lastSyncedAt } :
       { state: 'insufficient_data', result, lastSyncedAt };
   } catch {
